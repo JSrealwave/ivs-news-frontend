@@ -32,7 +32,8 @@ export default function Home() {
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json() as Promise<Article[]>;
     },
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60,
   });
 
   return (
@@ -40,8 +41,8 @@ export default function Home() {
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "48px 24px" }}>
         {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "64px" }}>
-          <h1 style={{ fontSize: "48px", fontWeight: "700", letterSpacing: "-0.025em", marginBottom: "16px" }}>
-            IVS Verge
+          <h1 style={{ fontSize: "48px", fontWeight: "700", letterSpacing: "-0.025em", marginBottom: "16px", color: "#ffffff" }}>
+            IVS News
           </h1>
           <p style={{ fontSize: "20px", color: "#a1a1aa", maxWidth: "672px", margin: "0 auto" }}>
             Technical news and analysis for intelligent video surveillance
@@ -59,10 +60,21 @@ export default function Home() {
                 borderRadius: "9999px",
                 fontSize: "14px",
                 fontWeight: "500",
-                transition: "all 0.2s",
+                transition: "all 0.2s ease",
                 backgroundColor: selectedCategory === cat ? "#ffffff" : "#27272a",
                 color: selectedCategory === cat ? "#000000" : "#d4d4d8",
                 boxShadow: selectedCategory === cat ? "0 10px 15px -3px rgb(0 0 0 / 0.1)" : "none",
+                transform: selectedCategory === cat ? "scale(1.05)" : "scale(1)",
+              }}
+              onMouseEnter={(e) => {
+                if (selectedCategory !== cat) {
+                  e.currentTarget.style.backgroundColor = "#3f3f46";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedCategory !== cat) {
+                  e.currentTarget.style.backgroundColor = "#27272a";
+                }
               }}
             >
               {cat.replace("_", " ")}
@@ -70,20 +82,40 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Grid */}
-        {isLoading && <div style={{ textAlign: "center", padding: "80px 0", color: "#a1a1aa" }}>Loading articles...</div>}
-        
+        {/* Loading Skeleton */}
+        {isLoading && (
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))", 
+            gap: "24px" 
+          }}>
+            {[...Array(6)].map((_, i) => (
+              <div key={i} style={{ 
+                backgroundColor: "#18181b", 
+                border: "1px solid #3f3f46", 
+                borderRadius: "16px", 
+                height: "420px",
+                animation: "pulse 1.5s infinite" 
+              }} />
+            ))}
+          </div>
+        )}
+
+        {/* Error */}
         {error && <div style={{ textAlign: "center", padding: "80px 0", color: "#ef4444" }}>Failed to load articles.</div>}
 
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))",
-          gap: "24px"
-        }}>
-          {articles?.map((article) => (
-            <ArticleCard key={article.id} article={article} />
-          ))}
-        </div>
+        {/* Articles Grid */}
+        {!isLoading && articles && (
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))",
+            gap: "24px"
+          }}>
+            {articles.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
