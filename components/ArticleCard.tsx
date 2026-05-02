@@ -15,8 +15,15 @@ interface Article {
   score_compelling: number;
 }
 
-export default function ArticleCard({ article }: { article: Article }) {
+interface ArticleCardProps {
+  article: Article;
+  viewMode: "grid" | "list";
+}
+
+export default function ArticleCard({ article, viewMode }: ArticleCardProps) {
   const [expanded, setExpanded] = useState(false);
+
+  const isList = viewMode === "list";
 
   const getCategoryStyle = (category: string) => {
     switch (category) {
@@ -29,44 +36,42 @@ export default function ArticleCard({ article }: { article: Article }) {
   };
 
   const displaySummary = article.summary 
-    ? (expanded ? article.summary : article.summary.slice(0, 160) + "...") 
+    ? (expanded ? article.summary : article.summary.slice(0, isList ? 120 : 160) + "...") 
     : "";
 
   return (
     <div 
       style={{
-        backgroundColor: "#18181b",
-        border: "1px solid #3f3f46",
-        borderRadius: "16px",
-        padding: "24px",
-        height: "100%",
+        backgroundColor: isList ? "transparent" : "#18181b",
+        border: isList ? "none" : "1px solid #3f3f46",
+        borderBottom: isList ? "1px solid #3f3f46" : "none",
+        borderRadius: isList ? "0" : "16px",
+        padding: isList ? "20px 0" : "24px",
         display: "flex",
         flexDirection: "column",
-        transition: "transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
-        cursor: "default",
+        transition: "all 0.2s ease",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-6px)";
-        e.currentTarget.style.boxShadow = "0 20px 25px -5px rgb(0 0 0 / 0.3)";
-        e.currentTarget.style.borderColor = "#52525b";
+        if (!isList) {
+          e.currentTarget.style.transform = "translateY(-4px)";
+          e.currentTarget.style.boxShadow = "0 20px 25px -5px rgb(0 0 0 / 0.3)";
+        }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "none";
-        e.currentTarget.style.borderColor = "#3f3f46";
+        if (!isList) {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "none";
+        }
       }}
     >
-      {/* Category + Scores */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
-        <span 
-          style={{
-            ...getCategoryStyle(article.category),
-            padding: "6px 16px",
-            borderRadius: "9999px",
-            fontSize: "13px",
-            fontWeight: "600",
-          }}
-        >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+        <span style={{
+          ...getCategoryStyle(article.category),
+          padding: "4px 12px",
+          borderRadius: "9999px",
+          fontSize: "12px",
+          fontWeight: "600",
+        }}>
           {article.category.replace("_", " ")}
         </span>
         
@@ -75,20 +80,18 @@ export default function ArticleCard({ article }: { article: Article }) {
         </div>
       </div>
 
-      {/* Title */}
       <h3 style={{ 
-        fontSize: "18px", 
+        fontSize: isList ? "18px" : "18px", 
         fontWeight: "600", 
         lineHeight: "1.35", 
-        marginBottom: "16px",
+        marginBottom: "12px",
         color: "#f4f4f5"
       }}>
         {article.title}
       </h3>
 
-      {/* Summary with toggle */}
       {article.summary && (
-        <div style={{ marginBottom: "24px", flexGrow: 1 }}>
+        <div style={{ marginBottom: "16px", flexGrow: 1 }}>
           <p style={{ 
             color: "#a3a3a3", 
             fontSize: "15px", 
@@ -97,11 +100,11 @@ export default function ArticleCard({ article }: { article: Article }) {
             {displaySummary}
           </p>
           
-          {article.summary.length > 160 && (
+          {article.summary.length > (isList ? 120 : 160) && (
             <button
               onClick={() => setExpanded(!expanded)}
               style={{
-                marginTop: "12px",
+                marginTop: "8px",
                 color: "#60a5fa",
                 fontSize: "14px",
                 fontWeight: "500",
@@ -120,25 +123,19 @@ export default function ArticleCard({ article }: { article: Article }) {
         </div>
       )}
 
-      {/* Read full article link */}
       <a
         href={article.url}
         target="_blank"
         rel="noopener noreferrer"
         style={{
-          marginTop: "auto",
-          paddingTop: "16px",
-          borderTop: "1px solid #3f3f46",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "8px",
           color: "#60a5fa",
           fontSize: "14.5px",
           fontWeight: "500",
           textDecoration: "none",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "8px",
         }}
-        onMouseEnter={(e) => e.currentTarget.style.color = "#93c5fd"}
-        onMouseLeave={(e) => e.currentTarget.style.color = "#60a5fa"}
       >
         Read full article
         <ExternalLink size={17} />
