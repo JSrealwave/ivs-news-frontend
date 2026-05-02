@@ -1,7 +1,7 @@
 
 "use client";
 
-import { ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import { ExternalLink, ChevronDown, ChevronUp, Newspaper } from "lucide-react";
 import { useState } from "react";
 
 interface Article {
@@ -9,6 +9,7 @@ interface Article {
   title: string;
   summary: string | null;
   url: string;
+  image?: string;
   category: string;
   score_relevance: number;
   score_technical: number;
@@ -22,6 +23,7 @@ interface ArticleCardProps {
 
 export default function ArticleCard({ article, viewMode }: ArticleCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const isList = viewMode === "list";
 
@@ -64,82 +66,121 @@ export default function ArticleCard({ article, viewMode }: ArticleCardProps) {
         }
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
-        <span style={{
-          ...getCategoryStyle(article.category),
-          padding: "4px 12px",
-          borderRadius: "9999px",
-          fontSize: "12px",
-          fontWeight: "600",
-        }}>
-          {article.category.replace("_", " ")}
-        </span>
-        
-        <div style={{ fontSize: "13px", color: "#71717a", fontFamily: "monospace" }}>
-          Rel {article.score_relevance} • Tech {article.score_technical}
-        </div>
-      </div>
-
-      <h3 style={{ 
-        fontSize: isList ? "18px" : "18px", 
-        fontWeight: "600", 
-        lineHeight: "1.35", 
-        marginBottom: "12px",
-        color: "#f4f4f5"
-      }}>
-        {article.title}
-      </h3>
-
-      {article.summary && (
-        <div style={{ marginBottom: "16px", flexGrow: 1 }}>
-          <p style={{ 
-            color: "#a3a3a3", 
-            fontSize: "15px", 
-            lineHeight: "1.55" 
-          }}>
-            {displaySummary}
-          </p>
-          
-          {article.summary.length > (isList ? 120 : 160) && (
-            <button
-              onClick={() => setExpanded(!expanded)}
+      <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+        <div
+          style={{
+            width: "clamp(100px, 15vw, 140px)",
+            minWidth: "clamp(100px, 15vw, 140px)",
+            aspectRatio: "1 / 1",
+            borderRadius: "12px",
+            background:
+              "linear-gradient(145deg, rgba(39,39,42,1) 0%, rgba(24,24,27,1) 100%)",
+            border: "1px solid rgba(82,82,91,0.6)",
+            boxShadow: "0 10px 24px -14px rgba(0,0,0,0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#a1a1aa",
+            flexShrink: 0,
+            overflow: "hidden",
+          }}
+        >
+          {article.image && !imageError ? (
+            <img
+              src={article.image}
+              alt={article.title}
+              onError={() => setImageError(true)}
               style={{
-                marginTop: "8px",
-                color: "#60a5fa",
-                fontSize: "14px",
-                fontWeight: "500",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
               }}
-            >
-              {expanded ? "Show less" : "Read more"}
-              {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </button>
+            />
+          ) : (
+            <Newspaper size={isList ? 38 : 44} />
           )}
         </div>
-      )}
 
-      <a
-        href={article.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          color: "#60a5fa",
-          fontSize: "14.5px",
-          fontWeight: "500",
-          textDecoration: "none",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "8px",
-        }}
-      >
-        Read full article
-        <ExternalLink size={17} />
-      </a>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px", gap: "12px", flexWrap: "wrap" }}>
+            <span style={{
+              ...getCategoryStyle(article.category),
+              padding: "4px 12px",
+              borderRadius: "9999px",
+              fontSize: "12px",
+              fontWeight: "600",
+            }}>
+              {article.category.replace("_", " ")}
+            </span>
+            
+            <div style={{ fontSize: "13px", color: "#71717a", fontFamily: "monospace" }}>
+              Rel {article.score_relevance} • Tech {article.score_technical}
+            </div>
+          </div>
+
+          <h3 style={{ 
+            fontSize: "18px", 
+            fontWeight: "600", 
+            lineHeight: "1.35", 
+            marginBottom: "12px",
+            color: "#f4f4f5"
+          }}>
+            {article.title}
+          </h3>
+
+          {article.summary && (
+            <div style={{ marginBottom: "16px", flexGrow: 1 }}>
+              <p style={{ 
+                color: "#a3a3a3", 
+                fontSize: "15px", 
+                lineHeight: "1.55" 
+              }}>
+                {displaySummary}
+              </p>
+              
+              {article.summary.length > (isList ? 120 : 160) && (
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  style={{
+                    marginTop: "8px",
+                    color: "#60a5fa",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  {expanded ? "Show less" : "Read more"}
+                  {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+              )}
+            </div>
+          )}
+
+          <a
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: "#60a5fa",
+              fontSize: "14.5px",
+              fontWeight: "500",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            Read full article
+            <ExternalLink size={17} />
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

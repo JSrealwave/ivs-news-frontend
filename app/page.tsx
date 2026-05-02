@@ -3,7 +3,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import ArticleCard from "../components/ArticleCard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Grid3X3, List } from "lucide-react";
 
 interface Article {
@@ -11,6 +11,7 @@ interface Article {
   title: string;
   summary: string | null;
   url: string;
+  image?: string;
   category: string;
   score_relevance: number;
   score_technical: number;
@@ -22,6 +23,22 @@ const categories = ["All", "CV_Technique", "Customer_Implementation", "Marketpla
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [todayViews, setTodayViews] = useState<number | null>(null);
+
+  useEffect(() => {
+    window.requestAnimationFrame(() => {
+      const todayKey = "ivsnews-today-views";
+      const dateKey = "ivsnews-today-date";
+      const today = new Date().toISOString().slice(0, 10);
+      const storedDate = window.localStorage.getItem(dateKey);
+      const storedViews = Number(window.localStorage.getItem(todayKey) ?? "0");
+      const nextViews = storedDate === today ? storedViews + 1 : 1;
+
+      window.localStorage.setItem(dateKey, today);
+      window.localStorage.setItem(todayKey, String(nextViews));
+      setTodayViews(nextViews);
+    });
+  }, []);
 
   const { data: articles, isLoading, error } = useQuery({
     queryKey: ["feed", selectedCategory],
@@ -49,6 +66,11 @@ export default function Home() {
           <p style={{ fontSize: "20px", color: "#a1a1aa", maxWidth: "672px", margin: "0 auto" }}>
             Technical news and analysis for intelligent video surveillance
           </p>
+          {todayViews !== null && (
+            <p style={{ marginTop: "14px", fontSize: "13px", color: "#71717a", fontFamily: "monospace" }}>
+              {todayViews.toLocaleString()} today{todayViews === 1 ? " view" : " views"}
+            </p>
+          )}
         </div>
 
         {/* Controls */}
@@ -143,6 +165,10 @@ export default function Home() {
             ))}
           </div>
         )}
+
+        <footer style={{ marginTop: "48px", textAlign: "center", color: "#71717a", fontSize: "13px" }}>
+          Fresh technical coverage for the IVS ecosystem.
+        </footer>
       </div>
     </div>
   );
