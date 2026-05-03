@@ -38,7 +38,7 @@ async function fetchArticles(selectedCategory: string): Promise<Article[]> {
   let query = supabase
     .from("ivs_articles")
     .select(
-      "id,title,summary,url,category,score_relevance,score_technical,score_compelling,created_at"
+      "id,title,summary,url,image,category,score_relevance,score_technical,score_compelling,created_at"
     )
     .order("created_at", { ascending: false })
     .limit(20);
@@ -66,17 +66,19 @@ export default function HomePageClient({
 
   // Simple local views counter
   useEffect(() => {
-    const todayKey = "ivsnews-today-views";
-    const dateKey = "ivsnews-today-date";
-    const today = new Date().toISOString().slice(0, 10);
+    window.requestAnimationFrame(() => {
+      const todayKey = "ivsnews-today-views";
+      const dateKey = "ivsnews-today-date";
+      const today = new Date().toISOString().slice(0, 10);
 
-    const storedDate = localStorage.getItem(dateKey);
-    const storedViews = Number(localStorage.getItem(todayKey) ?? "0");
-    const nextViews = storedDate === today ? storedViews + 1 : 1;
+      const storedDate = localStorage.getItem(dateKey);
+      const storedViews = Number(localStorage.getItem(todayKey) ?? "0");
+      const nextViews = storedDate === today ? storedViews + 1 : 1;
 
-    localStorage.setItem(dateKey, today);
-    localStorage.setItem(todayKey, String(nextViews));
-    setTodayViews(nextViews);
+      localStorage.setItem(dateKey, today);
+      localStorage.setItem(todayKey, String(nextViews));
+      setTodayViews(nextViews);
+    });
   }, []);
 
   const { data: articles, isLoading, error } = useQuery({

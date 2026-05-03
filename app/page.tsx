@@ -20,7 +20,7 @@ async function getInitialArticles(): Promise<{
   const { data, error } = await supabaseServer
     .from("ivs_articles")
     .select(
-      "id,title,summary,url,category,score_relevance,score_technical,score_compelling,created_at"
+      "id,title,summary,url,image,category,score_relevance,score_technical,score_compelling,created_at"
     )
     .order("created_at", { ascending: false })
     .limit(20);
