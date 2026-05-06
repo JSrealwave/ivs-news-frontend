@@ -6,19 +6,7 @@ import { useEffect, useState } from "react";
 import { Grid3X3, List } from "lucide-react";
 import ArticleCard from "./ArticleCard";
 import { getSupabaseClient } from "../lib/supabase/client";
-
-export interface Article {
-  id: string;
-  title: string;
-  summary: string | null;
-  url: string;
-  image?: string;
-  category: string;
-  score_relevance: number;
-  score_technical: number;
-  score_compelling: number;
-  created_at: string;
-}
+import { ARTICLE_SELECT_FIELDS, type Article } from "../lib/articles";
 
 const categories = [
   "All",
@@ -37,9 +25,7 @@ async function fetchArticles(selectedCategory: string): Promise<Article[]> {
 
   let query = supabase
     .from("ivs_articles")
-    .select(
-      "id,title,summary,url,image,category,score_relevance,score_technical,score_compelling,created_at"
-    )
+    .select(ARTICLE_SELECT_FIELDS)
     .order("created_at", { ascending: false })
     .limit(20);
 

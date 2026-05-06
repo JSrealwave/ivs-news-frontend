@@ -1,5 +1,6 @@
 
-import HomePageClient, { type Article } from "../components/HomePageClient";
+import HomePageClient from "../components/HomePageClient";
+import { ARTICLE_SELECT_FIELDS, type Article } from "../lib/articles";
 import { getSupabaseServerClient } from "../lib/supabase/server";
 
 export const revalidate = 3600;
@@ -19,9 +20,7 @@ async function getInitialArticles(): Promise<{
 
   const { data, error } = await supabaseServer
     .from("ivs_articles")
-    .select(
-      "id,title,summary,url,image,category,score_relevance,score_technical,score_compelling,created_at"
-    )
+    .select(ARTICLE_SELECT_FIELDS)
     .order("created_at", { ascending: false })
     .limit(20);
 
