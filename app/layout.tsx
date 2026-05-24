@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import ClientProviders from "./ClientProviders";
+import SiteHeader from "../components/SiteHeader";
 
 export const metadata: Metadata = {
   title: "IVS News | Intelligent Video Surveillance",
@@ -16,15 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body 
-        className="bg-zinc-950 text-zinc-200 min-h-screen overflow-x-hidden"
-        style={{ 
-          margin: 0, 
-          padding: 0,
-          backgroundColor: "#09090b" 
-        }}
-      >
+      <body className="min-h-screen overflow-x-hidden bg-zinc-950 text-zinc-200 antialiased">
         <ClientProviders>
+          <SiteHeader />
           {children}
         </ClientProviders>
         <Analytics />

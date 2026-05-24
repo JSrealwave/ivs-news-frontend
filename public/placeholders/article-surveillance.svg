@@ -1,0 +1,8 @@
+<svg width="400" height="225" viewBox="0 0 400 225" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="225" rx="8" fill="#1F2937"/>
+  <rect x="50" y="60" width="300" height="120" rx="4" fill="#374151"/>
+  <circle cx="100" cy="110" r="25" fill="#60A5FA"/>
+  <circle cx="200" cy="110" r="18" fill="#34D399"/>
+  <circle cx="280" cy="110" r="22" fill="#FBBF24"/>
+  <text x="200" y="190" text-anchor="middle" fill="#9CA3AF" font-size="14" font-family="Arial">Surveillance</text>
+</svg>

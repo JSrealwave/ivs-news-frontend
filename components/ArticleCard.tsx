@@ -1,9 +1,11 @@
 
 "use client";
-/* eslint-disable @next/next/no-img-element */
 
-import { ExternalLink, ChevronDown, ChevronUp, Newspaper } from "lucide-react";
+import { ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, type CSSProperties } from "react";
+
+import { resolveArticleProviderLogo } from "../lib/image-sources";
+import SmartImage from "./SmartImage";
 
 interface Article {
   id: string;
@@ -11,6 +13,7 @@ interface Article {
   summary: string | null;
   url: string;
   image: string | null;
+  entities?: string[] | null;
   category: string;
   score_relevance: number;
   score_technical: number;
@@ -20,13 +23,24 @@ interface Article {
 interface ArticleCardProps {
   article: Article;
   viewMode: "grid" | "list";
+  providerLogoByHost?: Record<string, string>;
+  providerLogoByName?: Record<string, string>;
 }
 
-export default function ArticleCard({ article, viewMode }: ArticleCardProps) {
+export default function ArticleCard({
+  article,
+  viewMode,
+  providerLogoByHost = {},
+  providerLogoByName = {},
+}: ArticleCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const [imageError, setImageError] = useState(false);
 
   const isList = viewMode === "list";
+  const providerLogo = resolveArticleProviderLogo(
+    article,
+    providerLogoByHost,
+    providerLogoByName,
+  );
 
   const getCategoryStyle = (category: string) => {
     switch (category) {
@@ -94,165 +108,130 @@ export default function ArticleCard({ article, viewMode }: ArticleCardProps) {
   };
 
   return (
-    <>
-      <article
-        style={cardStyle}
-        onMouseEnter={(e) => {
-          if (!isList) {
-            e.currentTarget.style.transform = "translateY(-4px)";
-            e.currentTarget.style.boxShadow = "0 20px 25px -5px rgb(0 0 0 / 0.3)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isList) {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "none";
-          }
-        }}
-      >
-        <div style={mediaWrapStyle}>
-          {article.image && !imageError ? (
-            <img
-              src={article.image}
-              alt={article.title}
-              onError={() => setImageError(true)}
-              style={{
-                width: "100%",
-                height: "100%",
-                display: "block",
-                objectFit: "cover",
-              }}
-            />
-          ) : (
-            <div
-              aria-hidden="true"
-              style={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#d4d4d8",
-                position: "relative",
-                background:
-                  "radial-gradient(circle at top, rgba(96, 165, 250, 0.28), transparent 45%), radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.25), transparent 40%), linear-gradient(145deg, rgba(39, 39, 42, 1) 0%, rgba(17, 24, 39, 1) 100%)",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  inset: "18%",
-                  borderRadius: "9999px",
-                  background: "rgba(255, 255, 255, 0.05)",
-                  filter: "blur(18px)",
-                }}
-              />
-              <Newspaper size={isList ? 48 : 58} />
-            </div>
-          )}
-        </div>
+    <article
+      style={cardStyle}
+      onMouseEnter={(e) => {
+        if (!isList) {
+          e.currentTarget.style.transform = "translateY(-4px)";
+          e.currentTarget.style.boxShadow = "0 20px 25px -5px rgb(0 0 0 / 0.3)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isList) {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "none";
+        }
+      }}
+    >
+      <SmartImage
+        src={article.image}
+        fallbackSrc={providerLogo}
+        alt={article.title}
+        style={mediaWrapStyle}
+        objectFit="cover"
+        showLoadingSkeleton
+      />
 
-        <div style={contentStyle}>
+      <div style={contentStyle}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: "12px",
+            gap: "12px",
+            flexWrap: "wrap",
+          }}
+        >
+          <span
+            style={{
+              ...getCategoryStyle(article.category),
+              padding: "4px 12px",
+              borderRadius: "9999px",
+              fontSize: "12px",
+              fontWeight: "600",
+            }}
+          >
+            {article.category.replace("_", " ")}
+          </span>
+
           <div
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              marginBottom: "12px",
-              gap: "12px",
-              flexWrap: "wrap",
+              fontSize: "13px",
+              color: "#71717a",
+              fontFamily: "monospace",
             }}
           >
-            <span
-              style={{
-                ...getCategoryStyle(article.category),
-                padding: "4px 12px",
-                borderRadius: "9999px",
-                fontSize: "12px",
-                fontWeight: "600",
-              }}
-            >
-              {article.category.replace("_", " ")}
-            </span>
-
-            <div
-              style={{
-                fontSize: "13px",
-                color: "#71717a",
-                fontFamily: "monospace",
-              }}
-            >
-              Rel {article.score_relevance} • Tech {article.score_technical}
-            </div>
+            Rel {article.score_relevance} • Tech {article.score_technical}
           </div>
+        </div>
 
-          <h3
-            style={{
-              fontSize: isList ? "20px" : "22px",
-              fontWeight: "600",
-              lineHeight: "1.35",
-              marginBottom: "12px",
-              color: "#f4f4f5",
-            }}
-          >
-            {article.title}
-          </h3>
+        <h3
+          style={{
+            fontSize: isList ? "20px" : "22px",
+            fontWeight: "600",
+            lineHeight: "1.35",
+            marginBottom: "12px",
+            color: "#f4f4f5",
+          }}
+        >
+          {article.title}
+        </h3>
 
-          {article.summary && (
-            <div style={{ marginBottom: "16px", flexGrow: 1 }}>
-              <p
+        {article.summary && (
+          <div style={{ marginBottom: "16px", flexGrow: 1 }}>
+            <p
+              style={{
+                color: "#a3a3a3",
+                fontSize: "15px",
+                lineHeight: "1.55",
+              }}
+            >
+              {displaySummary}
+            </p>
+
+            {article.summary.length > (isList ? 120 : 160) && (
+              <button
+                onClick={() => setExpanded(!expanded)}
                 style={{
-                  color: "#a3a3a3",
-                  fontSize: "15px",
-                  lineHeight: "1.55",
+                  marginTop: "8px",
+                  color: "#60a5fa",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
                 }}
               >
-                {displaySummary}
-              </p>
+                {expanded ? "Show less" : "Read more"}
+                {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+            )}
+          </div>
+        )}
 
-              {article.summary.length > (isList ? 120 : 160) && (
-                <button
-                  onClick={() => setExpanded(!expanded)}
-                  style={{
-                    marginTop: "8px",
-                    color: "#60a5fa",
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                  }}
-                >
-                  {expanded ? "Show less" : "Read more"}
-                  {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
-              )}
-            </div>
-          )}
-
-          <a
-            href={article.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: "#60a5fa",
-              fontSize: "14.5px",
-              fontWeight: "500",
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            Read full article
-            <ExternalLink size={17} />
-          </a>
-        </div>
-      </article>
-    </>
+        <a
+          href={article.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: "#60a5fa",
+            fontSize: "14.5px",
+            fontWeight: "500",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          Read full article
+          <ExternalLink size={17} />
+        </a>
+      </div>
+    </article>
   );
 }

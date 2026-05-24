@@ -7,7 +7,6 @@ import { Grid3X3, List } from "lucide-react";
 import ArticleCard from "./ArticleCard";
 import { getSupabaseClient } from "../lib/supabase/client";
 import { ARTICLE_SELECT_FIELDS, type Article } from "../lib/articles";
-
 const categories = [
   "All",
   "CV_Technique",
@@ -42,9 +41,13 @@ async function fetchArticles(selectedCategory: string): Promise<Article[]> {
 export default function HomePageClient({
   initialArticles,
   initialLoadError,
+  providerLogoByHost = {},
+  providerLogoByName = {},
 }: {
   initialArticles: Article[];
   initialLoadError: string | null;
+  providerLogoByHost?: Record<string, string>;
+  providerLogoByName?: Record<string, string>;
 }) {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -150,7 +153,13 @@ export default function HomePageClient({
             gap: viewMode === "grid" ? "24px" : "2px",
           }}>
             {articles.map((article) => (
-              <ArticleCard key={article.id} article={article} viewMode={viewMode} />
+              <ArticleCard
+                key={article.id}
+                article={article}
+                viewMode={viewMode}
+                providerLogoByHost={providerLogoByHost}
+                providerLogoByName={providerLogoByName}
+              />
             ))}
           </div>
         )}

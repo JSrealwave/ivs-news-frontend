@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "directory:data": "node scripts/parse-directory-providers.mjs",
+    "directory:fallback": "node scripts/build-directory-fallback.mjs",
+    "directory:migrate": "node scripts/apply-providers-migration.mjs",
+    "directory:seed": "node scripts/seed-providers.mjs",
+    "articles:backfill-images": "node scripts/backfill-article-images.mjs",
+    "articles:backfill-images": "node scripts/backfill-article-images.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.1",

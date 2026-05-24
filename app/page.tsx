@@ -1,6 +1,11 @@
 
 import HomePageClient from "../components/HomePageClient";
 import { ARTICLE_SELECT_FIELDS, type Article } from "../lib/articles";
+import {
+  buildProviderLogoByHost,
+  buildProviderLogoByName,
+} from "../lib/image-sources";
+import { getDirectoryProviders } from "../lib/providers";
 import { getSupabaseServerClient } from "../lib/supabase/server";
 
 export const revalidate = 3600;
@@ -38,11 +43,20 @@ async function getInitialArticles(): Promise<{
 }
 
 export default async function Home() {
-  const { articles, initialLoadError } = await getInitialArticles();
+  const [{ articles, initialLoadError }, directory] = await Promise.all([
+    getInitialArticles(),
+    getDirectoryProviders(),
+  ]);
+
+  const providerLogoByHost = buildProviderLogoByHost(directory.providers);
+  const providerLogoByName = buildProviderLogoByName(directory.providers);
+
   return (
     <HomePageClient
       initialArticles={articles}
       initialLoadError={initialLoadError}
+      providerLogoByHost={providerLogoByHost}
+      providerLogoByName={providerLogoByName}
     />
   );
 }
