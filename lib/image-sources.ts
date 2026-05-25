@@ -1,9 +1,19 @@
 import {
   ARTICLE_PLACEHOLDER_SRC,
+  buildArticleImageChain,
+} from "./image-placeholders";
+import {
+  LOCAL_PROVIDER_LOGOS,
+  preferLocalProviderLogoUrl,
+  resolveLocalLogoByHost,
+} from "./local-provider-logos";
+
+export {
+  ARTICLE_PLACEHOLDER_SRC,
+  buildArticleImageChain,
   uniqueImageSources,
 } from "./image-placeholders";
-
-export { ARTICLE_PLACEHOLDER_SRC, uniqueImageSources } from "./image-placeholders";
+export { isLocalLogoSrc, normalizeLogoSrc } from "./local-provider-logos";
 
 export function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -23,12 +33,26 @@ export function extractHostname(url: string | null | undefined): string | null {
   }
 }
 
+function normalizeProviderLogo(
+  provider: { name: string; website?: string | null; logoUrl?: string | null },
+): string | null {
+  const host = extractHostname(provider.website);
+  return preferLocalProviderLogoUrl(
+    provider.logoUrl,
+    provider.name,
+    provider.website,
+    host,
+  );
+}
+
 export function buildProviderLogoLookup(
   providers: { name: string; website?: string | null; logoUrl?: string | null }[],
 ): ProviderLogoLookup {
-  const map = new Map<string, string>();
+  const map = new Map<string, string>(
+    Object.entries(LOCAL_PROVIDER_LOGOS.byName),
+  );
   for (const provider of providers) {
-    const logo = provider.logoUrl?.trim();
+    const logo = normalizeProviderLogo(provider);
     if (!logo) continue;
     map.set(provider.name.toLowerCase(), logo);
   }
@@ -42,14 +66,22 @@ export function buildProviderLogoByName(
 }
 
 export function buildProviderLogoByHost(
-  providers: { website?: string | null; logoUrl?: string | null }[],
+  providers: {
+    name?: string;
+    website?: string | null;
+    logoUrl?: string | null;
+  }[],
 ): Record<string, string> {
-  const map: Record<string, string> = {};
+  const map: Record<string, string> = { ...LOCAL_PROVIDER_LOGOS.byHost };
   for (const provider of providers) {
-    const logo = provider.logoUrl?.trim();
-    if (!logo) continue;
     const host = extractHostname(provider.website);
-    if (host) map[host] = logo;
+    const logo = normalizeProviderLogo({
+      name: provider.name ?? "",
+      website: provider.website,
+      logoUrl: provider.logoUrl,
+    });
+    if (!logo || !host) continue;
+    map[host] = logo;
   }
   return map;
 }
@@ -60,6 +92,10 @@ export function resolveProviderLogoForUrl(
 ): string | null {
   const host = extractHostname(articleUrl);
   if (!host) return null;
+
+  const local = resolveLocalLogoByHost(host);
+  if (local) return local;
+
   if (logoByHost[host]) return logoByHost[host];
   const parts = host.split(".");
   for (let i = 1; i < parts.length; i++) {
@@ -80,7 +116,9 @@ export function findProviderLogoForArticle(
   logosByHost: Record<string, string> = {},
 ): string | null {
   const fromHost = resolveProviderLogoForUrl(article.url, logosByHost);
-  if (fromHost) return fromHost;
+  if (fromHost) {
+    return preferLocalProviderLogoUrl(fromHost, null, article.url, null);
+  }
 
   if (logosByName.size === 0) return null;
 
@@ -88,9 +126,13 @@ export function findProviderLogoForArticle(
   for (const entity of entities) {
     const key = entity.trim().toLowerCase();
     const direct = logosByName.get(key);
-    if (direct) return direct;
+    if (direct) {
+      return preferLocalProviderLogoUrl(direct, entity, article.url, null);
+    }
     for (const [name, logo] of logosByName) {
-      if (key.includes(name) || name.includes(key)) return logo;
+      if (key.includes(name) || name.includes(key)) {
+        return preferLocalProviderLogoUrl(logo, name, article.url, null);
+      }
     }
   }
 
@@ -102,7 +144,10 @@ export function findProviderLogoForArticle(
       best = { name, logo };
     }
   }
-  return best?.logo ?? null;
+  const logo = best?.logo ?? null;
+  return logo
+    ? preferLocalProviderLogoUrl(logo, best?.name ?? null, article.url, null)
+    : null;
 }
 
 export function resolveArticleProviderLogo(
@@ -136,7 +181,7 @@ export function resolveArticleImageSources(
   const providerLogo = logosByName
     ? findProviderLogoForArticle(article, logosByName, logosByHost)
     : resolveProviderLogoForUrl(article.url, logosByHost);
-  return uniqueImageSources(
+  return buildArticleImageChain(
     article.image,
     providerLogo,
     ARTICLE_PLACEHOLDER_SRC,

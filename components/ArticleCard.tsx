@@ -25,6 +25,8 @@ interface ArticleCardProps {
   viewMode: "grid" | "list";
   providerLogoByHost?: Record<string, string>;
   providerLogoByName?: Record<string, string>;
+  /** Eager-load above-the-fold thumbnails on first paint. */
+  priorityImage?: boolean;
 }
 
 export default function ArticleCard({
@@ -32,6 +34,7 @@ export default function ArticleCard({
   viewMode,
   providerLogoByHost = {},
   providerLogoByName = {},
+  priorityImage = false,
 }: ArticleCardProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -130,6 +133,7 @@ export default function ArticleCard({
         style={mediaWrapStyle}
         objectFit="cover"
         showLoadingSkeleton
+        priority={priorityImage}
       />
 
       <div style={contentStyle}>

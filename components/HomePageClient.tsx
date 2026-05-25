@@ -1,12 +1,13 @@
-
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Grid3X3, List } from "lucide-react";
 import ArticleCard from "./ArticleCard";
+import { PageContainer } from "./PageContainer";
 import { getSupabaseClient } from "../lib/supabase/client";
 import { ARTICLE_SELECT_FIELDS, type Article } from "../lib/articles";
+
 const categories = [
   "All",
   "CV_Technique",
@@ -53,7 +54,6 @@ export default function HomePageClient({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [todayViews, setTodayViews] = useState<number | null>(null);
 
-  // Simple local views counter
   useEffect(() => {
     window.requestAnimationFrame(() => {
       const todayKey = "ivsnews-today-views";
@@ -70,104 +70,160 @@ export default function HomePageClient({
     });
   }, []);
 
-  const { data: articles, isLoading, error } = useQuery({
+  const { data: articles, isPending, error } = useQuery({
     queryKey: ["feed", selectedCategory],
     queryFn: () => fetchArticles(selectedCategory),
     staleTime: 1000 * 60 * 30,
     gcTime: 1000 * 60 * 60,
     initialData: selectedCategory === "All" ? initialArticles : undefined,
+    refetchOnMount: false,
   });
 
+  const feedArticles =
+    articles ?? (selectedCategory === "All" ? initialArticles : []);
+  const showFeedLoading = isPending && feedArticles.length === 0;
+
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#09090b", color: "#e4e4e7" }}>
-      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "48px 24px" }}>
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "64px" }}>
-          <h1 style={{ fontSize: "48px", fontWeight: "700", letterSpacing: "-0.025em", marginBottom: "16px", color: "#ffffff" }}>
+    <div className="min-h-screen bg-zinc-950 text-zinc-200">
+      <PageContainer className="pb-16">
+        <div className="mb-10 max-w-3xl sm:mb-12 lg:mb-14">
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             IVS News
           </h1>
-          <p style={{ fontSize: "20px", color: "#a1a1aa", maxWidth: "672px", margin: "0 auto" }}>
+          <p className="mt-3 text-base text-zinc-400 sm:text-lg">
             Technical news and analysis for intelligent video surveillance
           </p>
           {todayViews !== null && (
-            <p style={{ marginTop: "14px", fontSize: "13px", color: "#71717a", fontFamily: "monospace" }}>
-              {todayViews.toLocaleString()} today{todayViews === 1 ? "" : "s"} view{todayViews === 1 ? "" : "s"}
+            <p className="mt-2 font-mono text-xs text-zinc-500 sm:text-sm">
+              {todayViews.toLocaleString()} today{todayViews === 1 ? "" : "s"}{" "}
+              view{todayViews === 1 ? "" : "s"}
             </p>
           )}
         </div>
 
-        {/* Controls */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "40px", flexWrap: "wrap", gap: "16px" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                style={{
-                  padding: "10px 24px",
-                  borderRadius: "9999px",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  transition: "all 0.2s ease",
-                  backgroundColor: selectedCategory === cat ? "#ffffff" : "#27272a",
-                  color: selectedCategory === cat ? "#000000" : "#d4d4d8",
-                }}
+        <div className="flex flex-col gap-8 lg:flex-row lg:gap-10">
+          <aside
+            className="lg:w-64 lg:shrink-0"
+            aria-label="Article filters"
+          >
+            <div>
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                Categories
+              </h2>
+              <div
+                role="group"
+                aria-label="Filter by category"
+                className="flex flex-wrap gap-2 lg:flex-col lg:gap-1"
               >
-                {cat.replace("_", " ")}
-              </button>
-            ))}
-          </div>
+                {categories.map((cat) => {
+                  const selected = selectedCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat)}
+                      aria-pressed={selected}
+                      className={[
+                        "rounded-lg px-3 py-2 text-left text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
+                        selected
+                          ? "bg-white text-zinc-950"
+                          : "text-zinc-300 hover:bg-zinc-800",
+                      ].join(" ")}
+                    >
+                      {cat.replace("_", " ")}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </aside>
 
-          <div style={{ display: "flex", gap: "6px", backgroundColor: "#27272a", padding: "4px", borderRadius: "9999px" }}>
-            <button onClick={() => setViewMode("grid")} style={{ padding: "6px 14px", borderRadius: "9999px", backgroundColor: viewMode === "grid" ? "#ffffff" : "transparent", color: viewMode === "grid" ? "#000000" : "#a1a1aa" }}>
-              <Grid3X3 size={18} />
-            </button>
-            <button onClick={() => setViewMode("list")} style={{ padding: "6px 14px", borderRadius: "9999px", backgroundColor: viewMode === "list" ? "#ffffff" : "transparent", color: viewMode === "list" ? "#000000" : "#a1a1aa" }}>
-              <List size={18} />
-            </button>
-          </div>
+          <main className="min-w-0 flex-1">
+            <div className="mb-4 flex justify-end">
+              <div
+                className="flex gap-1.5 rounded-full bg-zinc-800 p-1"
+                role="group"
+                aria-label="View mode"
+              >
+                <button
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  aria-pressed={viewMode === "grid"}
+                  aria-label="Grid view"
+                  className={[
+                    "rounded-full px-3.5 py-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
+                    viewMode === "grid"
+                      ? "bg-white text-zinc-950"
+                      : "text-zinc-400 hover:text-zinc-200",
+                  ].join(" ")}
+                >
+                  <Grid3X3 size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  aria-pressed={viewMode === "list"}
+                  aria-label="List view"
+                  className={[
+                    "rounded-full px-3.5 py-1.5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
+                    viewMode === "list"
+                      ? "bg-white text-zinc-950"
+                      : "text-zinc-400 hover:text-zinc-200",
+                  ].join(" ")}
+                >
+                  <List size={18} />
+                </button>
+              </div>
+            </div>
+
+            {showFeedLoading && (
+              <div className="article-grid">
+                {[...Array(8)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-[420px] animate-pulse rounded-2xl border border-zinc-700 bg-zinc-900"
+                  />
+                ))}
+              </div>
+            )}
+
+            {initialLoadError && (
+              <p className="py-20 text-left text-red-500">{initialLoadError}</p>
+            )}
+
+            {error && (
+              <p className="py-20 text-left text-red-500">
+                Failed to load articles: {error.message}
+              </p>
+            )}
+
+            {feedArticles.length > 0 && (
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "article-grid"
+                    : "grid grid-cols-1 gap-0.5"
+                }
+              >
+                {feedArticles.map((article, index) => (
+                  <ArticleCard
+                    key={article.id}
+                    article={article}
+                    viewMode={viewMode}
+                    providerLogoByHost={providerLogoByHost}
+                    providerLogoByName={providerLogoByName}
+                    priorityImage={index < 12}
+                  />
+                ))}
+              </div>
+            )}
+          </main>
         </div>
 
-        {isLoading && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))", gap: "24px" }}>
-            {[...Array(6)].map((_, i) => (
-              <div key={i} style={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: "16px", height: "420px" }} />
-            ))}
-          </div>
-        )}
-
-        {initialLoadError && (
-          <div style={{ textAlign: "center", padding: "80px 0", color: "#ef4444" }}>{initialLoadError}</div>
-        )}
-
-        {error && (
-          <div style={{ textAlign: "center", padding: "80px 0", color: "#ef4444" }}>
-            Failed to load articles: {error.message}
-          </div>
-        )}
-
-        {!isLoading && articles && (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: viewMode === "grid" ? "repeat(auto-fit, minmax(380px, 1fr))" : "1fr",
-            gap: viewMode === "grid" ? "24px" : "2px",
-          }}>
-            {articles.map((article) => (
-              <ArticleCard
-                key={article.id}
-                article={article}
-                viewMode={viewMode}
-                providerLogoByHost={providerLogoByHost}
-                providerLogoByName={providerLogoByName}
-              />
-            ))}
-          </div>
-        )}
-
-        <footer style={{ marginTop: "80px", textAlign: "center", color: "#71717a", fontSize: "13px" }}>
+        <footer className="mt-16 border-t border-zinc-800 pt-8 text-left text-sm text-zinc-500 sm:mt-20">
           Fresh technical coverage for the IVS ecosystem • Built with Grok
         </footer>
-      </div>
+      </PageContainer>
     </div>
   );
 }

@@ -140,7 +140,7 @@ export default async function AnalyticsPage({
         padding: "40px 20px",
       }}
     >
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+      <div style={{ width: "100%" }}>
         <div
           style={{
             display: "flex",

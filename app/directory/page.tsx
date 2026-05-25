@@ -2,8 +2,20 @@ import type { Metadata } from "next";
 
 import DirectoryPageClient from "../../components/DirectoryPageClient";
 import directoryFallback from "../../data/directory-providers.json";
-import type { DirectoryData } from "../../lib/directory";
+import type { DirectoryData, DirectoryProvider } from "../../lib/directory";
+import { preferLocalProviderLogoUrl } from "../../lib/local-provider-logos";
 import { getDirectoryProviders } from "../../lib/providers";
+
+function enrichProviderLogo(provider: DirectoryProvider): DirectoryProvider {
+  return {
+    ...provider,
+    logoUrl: preferLocalProviderLogoUrl(
+      provider.logoUrl,
+      provider.name,
+      provider.website,
+    ),
+  };
+}
 
 export const metadata: Metadata = {
   title: "Provider Directory | IVS News",
@@ -21,7 +33,9 @@ export default async function DirectoryPage() {
   const useStatic =
     result.source === "static" || result.providers.length === 0;
 
-  const providers = useStatic ? fallbackData.providers : result.providers;
+  const providers = (useStatic ? fallbackData.providers : result.providers).map(
+    enrichProviderLogo,
+  );
   const updatedAt = useStatic ? fallbackData.updatedAt : result.updatedAt;
   const loadError =
     useStatic && result.loadError

@@ -1,4 +1,5 @@
 import type { DirectoryProvider } from "./directory";
+import { preferLocalProviderLogoUrl } from "./local-provider-logos";
 import { formatProviderLoadError } from "./provider-load-errors";
 import { getSupabaseServerClient } from "./supabase/server";
 
@@ -24,7 +25,11 @@ export function mapProviderRowToDirectory(row: ProviderRow): DirectoryProvider {
     categories: row.category ?? [],
     description: row.description ?? "",
     website: row.website ?? "",
-    logoUrl: row.logo_url,
+    logoUrl: preferLocalProviderLogoUrl(
+      row.logo_url,
+      row.name,
+      row.website,
+    ),
     thumbnailUrl: row.thumbnail_url,
   };
 }

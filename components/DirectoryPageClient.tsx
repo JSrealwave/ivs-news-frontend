@@ -10,6 +10,7 @@ import {
   providerMatchesCategory,
   providerMatchesSearch,
 } from "../lib/directory";
+import { PageContainer } from "./PageContainer";
 import ProviderCard from "./ProviderCard";
 
 export default function DirectoryPageClient({
@@ -39,8 +40,8 @@ export default function DirectoryPageClient({
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-200">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-        <div className="mb-8 max-w-2xl">
+      <PageContainer>
+        <div className="mb-10 max-w-3xl sm:mb-12 lg:mb-14">
           <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Video Analytics Directory
           </h1>
@@ -69,55 +70,66 @@ export default function DirectoryPageClient({
           </div>
         ) : null}
 
-        <div className="mb-6">
-          <label htmlFor="directory-search" className="sr-only">
-            Search providers
-          </label>
-          <div className="relative max-w-xl">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-zinc-500"
-              aria-hidden
-            />
-            <input
-              id="directory-search"
-              type="search"
-              placeholder="Search by name, category, or description…"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-11 pr-4 text-sm text-zinc-100 placeholder:text-zinc-500 focus-visible:border-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-blue-500/40"
-            />
-          </div>
-        </div>
-
         <div className="flex flex-col gap-8 lg:flex-row lg:gap-10">
-          <aside className="lg:w-56 lg:shrink-0">
-            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-              Categories
-            </h2>
-            <nav
-              aria-label="Filter by category"
-              className="flex flex-wrap gap-2 lg:flex-col lg:gap-1"
-            >
-              {DIRECTORY_CATEGORIES.map((cat) => {
-                const selected = category === cat;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategory(cat)}
-                    aria-pressed={selected}
-                    className={[
-                      "rounded-lg px-3 py-2 text-left text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
-                      selected
-                        ? "bg-white text-zinc-950"
-                        : "text-zinc-300 hover:bg-zinc-800",
-                    ].join(" ")}
-                  >
-                    {cat}
-                  </button>
-                );
-              })}
-            </nav>
+          <aside
+            className="lg:w-64 lg:shrink-0"
+            aria-label="Directory filters"
+          >
+            <div className="space-y-6">
+              <div>
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  Search
+                </h2>
+                <label htmlFor="directory-search" className="sr-only">
+                  Search providers
+                </label>
+                <div className="relative">
+                  <Search
+                    className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-zinc-500"
+                    aria-hidden
+                  />
+                  <input
+                    id="directory-search"
+                    type="search"
+                    placeholder="Search providers…"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-11 pr-4 text-sm text-zinc-100 placeholder:text-zinc-500 focus-visible:border-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-blue-500/40"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  Categories
+                </h2>
+                <div
+                  role="group"
+                  aria-label="Filter by category"
+                  className="flex flex-wrap gap-2 lg:flex-col lg:gap-1"
+                >
+                  {DIRECTORY_CATEGORIES.map((cat) => {
+                    const selected = category === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setCategory(cat)}
+                        aria-pressed={selected}
+                        className={[
+                          "rounded-lg px-3 py-2 text-left text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
+                          selected
+                            ? "bg-white text-zinc-950"
+                            : "text-zinc-300 hover:bg-zinc-800",
+                        ].join(" ")}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </aside>
 
           <main className="min-w-0 flex-1">
@@ -129,7 +141,7 @@ export default function DirectoryPageClient({
 
             {filtered.length === 0 ? (
               <div
-                className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 px-6 py-16 text-center"
+                className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 px-6 py-16 text-left"
                 role="status"
               >
                 <p className="text-lg font-medium text-zinc-200">
@@ -154,7 +166,7 @@ export default function DirectoryPageClient({
                 <p className="mb-4 text-sm text-zinc-500">
                   Showing {filtered.length} of {providers.length} providers
                 </p>
-                <ul className="grid list-none gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3">
+                <ul className="directory-grid">
                   {filtered.map((provider) => (
                     <li key={provider.id}>
                       <ProviderCard provider={provider} />
@@ -165,7 +177,7 @@ export default function DirectoryPageClient({
             )}
           </main>
         </div>
-      </div>
+      </PageContainer>
     </div>
   );
 }

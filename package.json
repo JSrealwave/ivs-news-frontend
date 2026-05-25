@@ -11,8 +11,9 @@
     "directory:fallback": "node scripts/build-directory-fallback.mjs",
     "directory:migrate": "node scripts/apply-providers-migration.mjs",
     "directory:seed": "node scripts/seed-providers.mjs",
+    "directory:logos": "node scripts/sync-provider-logos.mjs",
     "articles:backfill-images": "node scripts/backfill-article-images.mjs",
-    "articles:backfill-images": "node scripts/backfill-article-images.mjs"
+    "articles:backfill-images:dry-run": "node scripts/backfill-article-images.mjs --dry-run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.1",

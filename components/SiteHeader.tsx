@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { SiteContainer } from "./PageContainer";
+
 const navLinks = [
   { href: "/", label: "News" },
   { href: "/directory", label: "Directory" },
@@ -12,8 +14,8 @@ export default function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-sm">
+      <SiteContainer className="flex items-center justify-between gap-4 py-4">
         <Link
           href="/"
           className="text-lg font-semibold tracking-tight text-white transition-colors hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
@@ -45,7 +47,7 @@ export default function SiteHeader() {
             );
           })}
         </nav>
-      </div>
+      </SiteContainer>
     </header>
   );
 }

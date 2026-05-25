@@ -1,5 +1,6 @@
 "use client";
 
+import { preferLocalProviderLogoUrl } from "../lib/local-provider-logos";
 import SmartImage from "./SmartImage";
 
 function initialsFromName(name: string): string {
@@ -12,17 +13,21 @@ function initialsFromName(name: string): string {
 export default function ProviderLogo({
   name,
   logoUrl,
+  website,
   size = 48,
   className = "",
 }: {
   name: string;
   logoUrl?: string | null;
+  website?: string | null;
   size?: number;
   className?: string;
 }) {
+  const resolvedLogo = preferLocalProviderLogoUrl(logoUrl, name, website);
+
   return (
     <SmartImage
-      src={logoUrl}
+      src={resolvedLogo}
       alt={`${name} logo`}
       objectFit="contain"
       showLoadingSkeleton

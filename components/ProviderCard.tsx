@@ -1,5 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import type { DirectoryProvider } from "../lib/directory";
+import { preferLocalProviderLogoUrl } from "../lib/local-provider-logos";
 import ProviderLogo from "./ProviderLogo";
 
 const categoryColors: Record<string, string> = {
@@ -18,10 +19,21 @@ function categoryClass(category: string) {
 }
 
 export default function ProviderCard({ provider }: { provider: DirectoryProvider }) {
+  const logoUrl = preferLocalProviderLogoUrl(
+    provider.logoUrl,
+    provider.name,
+    provider.website,
+  );
+
   return (
     <article className="flex h-full flex-col rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 shadow-sm transition hover:border-zinc-700 hover:bg-zinc-900">
       <div className="mb-4 flex items-start gap-3">
-        <ProviderLogo name={provider.name} logoUrl={provider.logoUrl} size={52} />
+        <ProviderLogo
+          name={provider.name}
+          logoUrl={logoUrl}
+          website={provider.website}
+          size={52}
+        />
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-semibold leading-snug text-zinc-50">
             {provider.name}
