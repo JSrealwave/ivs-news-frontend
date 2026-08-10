@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 import { SiteContainer } from "./PageContainer";
 
 const navLinks = [
-  { href: "/", label: "News" },
+  { href: "/news", label: "News" },
+  { href: "/briefs", label: "Briefs" },
   { href: "/directory", label: "Directory" },
 ];
 
@@ -25,10 +26,7 @@ export default function SiteHeader() {
 
         <nav aria-label="Main navigation" className="flex items-center gap-2">
           {navLinks.map((link) => {
-            const isActive =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href);
+            const isActive = pathname.startsWith(link.href);
 
             return (
               <Link

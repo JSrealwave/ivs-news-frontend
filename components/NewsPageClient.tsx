@@ -1,12 +1,16 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { Grid3X3, List } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Grid3X3, List, Search } from "lucide-react";
 import ArticleCard from "./ArticleCard";
 import { PageContainer } from "./PageContainer";
 import { getSupabaseClient } from "../lib/supabase/client";
-import { ARTICLE_SELECT_FIELDS, type Article } from "../lib/articles";
+import {
+  ARTICLE_FEED_LIMIT,
+  ARTICLE_SELECT_FIELDS,
+  type Article,
+} from "../lib/articles";
 
 const categories = [
   "All",
@@ -26,8 +30,9 @@ async function fetchArticles(selectedCategory: string): Promise<Article[]> {
   let query = supabase
     .from("ivs_articles")
     .select(ARTICLE_SELECT_FIELDS)
+    .order("published_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
-    .limit(20);
+    .limit(ARTICLE_FEED_LIMIT);
 
   if (selectedCategory !== "All") {
     query = query.eq("category", selectedCategory);
@@ -39,7 +44,7 @@ async function fetchArticles(selectedCategory: string): Promise<Article[]> {
   return (data ?? []) as Article[];
 }
 
-export default function HomePageClient({
+export default function NewsPageClient({
   initialArticles,
   initialLoadError,
   providerLogoByHost = {},
@@ -52,6 +57,7 @@ export default function HomePageClient({
 }) {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [searchQuery, setSearchQuery] = useState("");
   const [todayViews, setTodayViews] = useState<number | null>(null);
 
   useEffect(() => {
@@ -81,6 +87,15 @@ export default function HomePageClient({
 
   const feedArticles =
     articles ?? (selectedCategory === "All" ? initialArticles : []);
+  const filteredArticles = useMemo(() => {
+    const needle = searchQuery.trim().toLowerCase();
+    if (!needle) return feedArticles;
+    return feedArticles.filter((article) => {
+      const title = article.title.toLowerCase();
+      const summary = (article.summary ?? "").toLowerCase();
+      return title.includes(needle) || summary.includes(needle);
+    });
+  }, [feedArticles, searchQuery]);
   const showFeedLoading = isPending && feedArticles.length === 0;
 
   return (
@@ -106,34 +121,59 @@ export default function HomePageClient({
             className="lg:w-64 lg:shrink-0"
             aria-label="Article filters"
           >
-            <div>
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                Categories
-              </h2>
-              <div
-                role="group"
-                aria-label="Filter by category"
-                className="flex flex-wrap gap-2 lg:flex-col lg:gap-1"
-              >
-                {categories.map((cat) => {
-                  const selected = selectedCategory === cat;
-                  return (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setSelectedCategory(cat)}
-                      aria-pressed={selected}
-                      className={[
-                        "rounded-lg px-3 py-2 text-left text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
-                        selected
-                          ? "bg-white text-zinc-950"
-                          : "text-zinc-300 hover:bg-zinc-800",
-                      ].join(" ")}
-                    >
-                      {cat.replace("_", " ")}
-                    </button>
-                  );
-                })}
+            <div className="space-y-6">
+              <div>
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  Search
+                </h2>
+                <label htmlFor="article-search" className="sr-only">
+                  Search articles
+                </label>
+                <div className="relative">
+                  <Search
+                    className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-zinc-500"
+                    aria-hidden
+                  />
+                  <input
+                    id="article-search"
+                    type="search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Search articles…"
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 pl-11 pr-4 text-sm text-zinc-100 placeholder:text-zinc-500 focus-visible:border-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-blue-500/40"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  Categories
+                </h2>
+                <div
+                  role="group"
+                  aria-label="Filter by category"
+                  className="flex flex-wrap gap-2 lg:flex-col lg:gap-1"
+                >
+                  {categories.map((cat) => {
+                    const selected = selectedCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setSelectedCategory(cat)}
+                        aria-pressed={selected}
+                        className={[
+                          "rounded-lg px-3 py-2 text-left text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
+                          selected
+                            ? "bg-white text-zinc-950"
+                            : "text-zinc-300 hover:bg-zinc-800",
+                        ].join(" ")}
+                      >
+                        {cat.replace("_", " ")}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </aside>
@@ -181,7 +221,7 @@ export default function HomePageClient({
                 {[...Array(8)].map((_, i) => (
                   <div
                     key={i}
-                    className="h-[420px] animate-pulse rounded-2xl border border-zinc-700 bg-zinc-900"
+                    className="h-[320px] animate-pulse rounded-2xl border border-zinc-700 bg-zinc-900"
                   />
                 ))}
               </div>
@@ -197,7 +237,15 @@ export default function HomePageClient({
               </p>
             )}
 
-            {feedArticles.length > 0 && (
+            {!showFeedLoading &&
+              feedArticles.length > 0 &&
+              filteredArticles.length === 0 && (
+                <p className="py-12 text-left text-sm text-zinc-400">
+                  No articles match your search.
+                </p>
+              )}
+
+            {filteredArticles.length > 0 && (
               <div
                 className={
                   viewMode === "grid"
@@ -205,7 +253,7 @@ export default function HomePageClient({
                     : "grid grid-cols-1 gap-0.5"
                 }
               >
-                {feedArticles.map((article, index) => (
+                {filteredArticles.map((article, index) => (
                   <ArticleCard
                     key={article.id}
                     article={article}

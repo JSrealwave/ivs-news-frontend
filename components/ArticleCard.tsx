@@ -4,21 +4,9 @@
 import { ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, type CSSProperties } from "react";
 
+import { formatArticlePublishedDate, type Article } from "../lib/articles";
 import { resolveArticleProviderLogo } from "../lib/image-sources";
 import SmartImage from "./SmartImage";
-
-interface Article {
-  id: string;
-  title: string;
-  summary: string | null;
-  url: string;
-  image: string | null;
-  entities?: string[] | null;
-  category: string;
-  score_relevance: number;
-  score_technical: number;
-  score_compelling: number;
-}
 
 interface ArticleCardProps {
   article: Article;
@@ -28,6 +16,8 @@ interface ArticleCardProps {
   /** Eager-load above-the-fold thumbnails on first paint. */
   priorityImage?: boolean;
 }
+
+const ASPECT_RATIO_16_9 = "16 / 9";
 
 export default function ArticleCard({
   article,
@@ -55,8 +45,13 @@ export default function ArticleCard({
     }
   };
 
-  const displaySummary = article.summary 
-    ? (expanded ? article.summary : article.summary.slice(0, isList ? 120 : 160) + "...") 
+  const publishedLabel = formatArticlePublishedDate(article.published_at);
+
+  const summaryPreviewLength = isList ? 120 : 120;
+  const displaySummary = article.summary
+    ? (expanded
+        ? article.summary
+        : article.summary.slice(0, summaryPreviewLength) + "...")
     : "";
 
   const cardStyle: CSSProperties = isList
@@ -65,15 +60,16 @@ export default function ArticleCard({
         borderBottom: "1px solid #3f3f46",
         padding: "24px 0",
         display: "grid",
-        gridTemplateColumns: "minmax(220px, 320px) minmax(0, 1fr)",
-        gap: "22px",
+        gridTemplateColumns:
+          "minmax(clamp(180px, 38vw, 280px), min(320px, 42vw)) minmax(0, 1fr)",
+        gap: "clamp(16px, 3vw, 22px)",
         alignItems: "start",
         transition: "all 0.2s ease",
       }
     : {
         backgroundColor: "#18181b",
         border: "1px solid #3f3f46",
-        borderRadius: "18px",
+        borderRadius: "16px",
         padding: 0,
         overflow: "hidden",
         display: "flex",
@@ -86,26 +82,29 @@ export default function ArticleCard({
         position: "relative",
         overflow: "hidden",
         background: "linear-gradient(145deg, #27272a 0%, #18181b 100%)",
-        border: "1px solid rgba(82, 82, 91, 0.6)",
-        boxShadow: "0 10px 24px -14px rgba(0, 0, 0, 0.7)",
         width: "100%",
-        height: "clamp(170px, 22vw, 220px)",
-        borderRadius: "16px",
+        aspectRatio: ASPECT_RATIO_16_9,
         flexShrink: 0,
+        border: "1px solid rgba(82, 82, 91, 0.6)",
+        borderRadius: "16px",
+        boxShadow: "0 10px 24px -14px rgba(0, 0, 0, 0.7)",
       }
     : {
         position: "relative",
         overflow: "hidden",
         background: "linear-gradient(145deg, #27272a 0%, #18181b 100%)",
-        width: "100%",
-        height: "clamp(190px, 18vw, 240px)",
+        width: "auto",
+        height: 140,
+        margin: "12px 12px 0",
         flexShrink: 0,
+        border: "1px solid rgba(82, 82, 91, 0.55)",
+        borderRadius: 12,
       };
 
   const contentStyle: CSSProperties = {
     flex: 1,
     minWidth: 0,
-    padding: isList ? "0" : "22px 22px 24px",
+    padding: isList ? "0" : "14px 14px 16px",
     display: "flex",
     flexDirection: "column",
   };
@@ -115,8 +114,8 @@ export default function ArticleCard({
       style={cardStyle}
       onMouseEnter={(e) => {
         if (!isList) {
-          e.currentTarget.style.transform = "translateY(-4px)";
-          e.currentTarget.style.boxShadow = "0 20px 25px -5px rgb(0 0 0 / 0.3)";
+          e.currentTarget.style.transform = "translateY(-2px)";
+          e.currentTarget.style.boxShadow = "0 12px 20px -8px rgb(0 0 0 / 0.35)";
         }
       }}
       onMouseLeave={(e) => {
@@ -142,15 +141,15 @@ export default function ArticleCard({
             display: "flex",
             justifyContent: "space-between",
             alignItems: "flex-start",
-            marginBottom: "12px",
-            gap: "12px",
+            marginBottom: isList ? "12px" : "8px",
+            gap: "10px",
             flexWrap: "wrap",
           }}
         >
           <span
             style={{
               ...getCategoryStyle(article.category),
-              padding: "4px 12px",
+              padding: isList ? "4px 12px" : "3px 10px",
               borderRadius: "9999px",
               fontSize: "12px",
               fontWeight: "600",
@@ -161,7 +160,7 @@ export default function ArticleCard({
 
           <div
             style={{
-              fontSize: "13px",
+              fontSize: isList ? "13px" : "12px",
               color: "#71717a",
               fontFamily: "monospace",
             }}
@@ -172,35 +171,49 @@ export default function ArticleCard({
 
         <h3
           style={{
-            fontSize: isList ? "20px" : "22px",
+            fontSize: isList ? "20px" : "18px",
             fontWeight: "600",
             lineHeight: "1.35",
-            marginBottom: "12px",
+            marginBottom: publishedLabel ? "6px" : isList ? "12px" : "8px",
             color: "#f4f4f5",
           }}
         >
           {article.title}
         </h3>
 
+        {publishedLabel && (
+          <time
+            dateTime={article.published_at ?? undefined}
+            style={{
+              display: "block",
+              marginBottom: isList ? "12px" : "8px",
+              fontSize: isList ? "14px" : "13px",
+              color: "#a1a1aa",
+            }}
+          >
+            {publishedLabel}
+          </time>
+        )}
+
         {article.summary && (
-          <div style={{ marginBottom: "16px", flexGrow: 1 }}>
+          <div style={{ marginBottom: isList ? "16px" : "12px", flexGrow: 1 }}>
             <p
               style={{
                 color: "#a3a3a3",
-                fontSize: "15px",
+                fontSize: isList ? "15px" : "14px",
                 lineHeight: "1.55",
               }}
             >
               {displaySummary}
             </p>
 
-            {article.summary.length > (isList ? 120 : 160) && (
+            {article.summary.length > summaryPreviewLength && (
               <button
                 onClick={() => setExpanded(!expanded)}
                 style={{
                   marginTop: "8px",
                   color: "#60a5fa",
-                  fontSize: "14px",
+                  fontSize: isList ? "14px" : "13px",
                   fontWeight: "500",
                   display: "flex",
                   alignItems: "center",
@@ -224,7 +237,7 @@ export default function ArticleCard({
           rel="noopener noreferrer"
           style={{
             color: "#60a5fa",
-            fontSize: "14.5px",
+            fontSize: isList ? "14.5px" : "13.5px",
             fontWeight: "500",
             textDecoration: "none",
             display: "inline-flex",
@@ -233,7 +246,7 @@ export default function ArticleCard({
           }}
         >
           Read full article
-          <ExternalLink size={17} />
+          <ExternalLink size={isList ? 17 : 15} />
         </a>
       </div>
     </article>
