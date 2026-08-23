@@ -1,8 +1,14 @@
-# Supabase — providers directory
+# Supabase
 
-## Migration
+## Migrations
 
-Apply `migrations/20260524120000_create_providers.sql` in the Supabase SQL editor, or:
+Apply SQL files in `migrations/` in the Supabase SQL editor (oldest first), including:
+
+- `20260524120000_create_providers.sql`
+- `20260809164900_create_ivs_briefs.sql`
+- `20260823120000_create_page_events.sql` (page views, dwell, outbound)
+
+Or:
 
 ```bash
 npm run directory:migrate   # needs DATABASE_URL or SUPABASE_ACCESS_TOKEN

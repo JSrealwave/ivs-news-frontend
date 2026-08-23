@@ -29,9 +29,19 @@ export async function generateMetadata({
     return { title: "Brief not found | IVS News" };
   }
 
+  const pageTitle = `${formatBriefDate(date)} brief`;
+  const url = `/briefs/${date}`;
+
   return {
-    title: `${formatBriefDate(date)} Brief | IVS News`,
+    title: pageTitle,
     description: brief.title,
+    alternates: { canonical: url },
+    openGraph: {
+      title: `${pageTitle} | IVS News`,
+      description: brief.title,
+      url,
+      type: "article",
+    },
   };
 }
 

@@ -4,6 +4,7 @@ import NewsPageClient from "../../components/NewsPageClient";
 import {
   ARTICLE_FEED_LIMIT,
   ARTICLE_SELECT_FIELDS,
+  filterNewsArticles,
   type Article,
 } from "../../lib/articles";
 import {
@@ -14,9 +15,9 @@ import { getDirectoryProviders } from "../../lib/providers";
 import { getSupabaseServerClient } from "../../lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "IVS News | Intelligent Video Surveillance",
+  title: "News",
   description:
-    "Technical news, edge AI, computer vision techniques, deployments, and marketplace updates in intelligent video surveillance.",
+    "Recent technical news and analysis for AI and edge video surveillance.",
 };
 
 export const revalidate = 3600;
@@ -49,7 +50,7 @@ async function getInitialArticles(): Promise<{
   }
 
   return {
-    articles: (data ?? []) as Article[],
+    articles: filterNewsArticles((data ?? []) as Article[]),
     initialLoadError: null,
   };
 }

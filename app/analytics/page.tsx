@@ -2,20 +2,18 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import type { Article } from "../../lib/articles";
+import { getTrafficStats, type TrafficStats } from "../../lib/event-stats";
 import { getSupabaseServerClient } from "../../lib/supabase/server";
 
-export const revalidate = 300;
-
-const DEFAULT_ANALYTICS_PASSWORD = "IVSadmin2026";
+export const revalidate = 60;
 
 type AnalyticsData = {
   totalArticles: number;
   articlesWithImages: number;
   imageCoveragePercent: number;
-  todayViews: string;
-  totalPageViews: string;
   lastPipelineRun: string;
   recentArticles: Pick<Article, "id" | "title" | "category" | "created_at" | "image">[];
+  traffic: TrafficStats;
 };
 
 function formatDateTime(value: string | null | undefined): string {
@@ -27,15 +25,16 @@ function formatDateTime(value: string | null | undefined): string {
 
 async function getAnalyticsData(): Promise<AnalyticsData> {
   const supabase = getSupabaseServerClient();
+  const traffic = await getTrafficStats();
+
   if (!supabase) {
     return {
       totalArticles: 0,
       articlesWithImages: 0,
       imageCoveragePercent: 0,
-      todayViews: "Unavailable",
-      totalPageViews: "Unavailable",
       lastPipelineRun: "Unknown",
       recentArticles: [],
+      traffic,
     };
   }
 
@@ -73,10 +72,9 @@ async function getAnalyticsData(): Promise<AnalyticsData> {
     totalArticles,
     articlesWithImages,
     imageCoveragePercent,
-    todayViews: "Unavailable (requires dedicated page-view store/API)",
-    totalPageViews: "Unavailable (Vercel Analytics API not configured)",
     lastPipelineRun,
     recentArticles: (recentRes.data ?? []) as AnalyticsData["recentArticles"],
+    traffic,
   };
 }
 
@@ -87,9 +85,9 @@ export default async function AnalyticsPage({
 }) {
   const params = await searchParams;
   const providedPw = Array.isArray(params.pw) ? params.pw[0] : params.pw;
-  const expectedPw = process.env.ANALYTICS_PASSWORD ?? DEFAULT_ANALYTICS_PASSWORD;
+  const expectedPw = process.env.ANALYTICS_PASSWORD;
 
-  if (!providedPw || providedPw !== expectedPw) {
+  if (!expectedPw || !providedPw || providedPw !== expectedPw) {
     return (
       <main
         style={{
@@ -206,18 +204,28 @@ export default async function AnalyticsPage({
           </article>
           <article style={metricCardStyle}>
             <p style={{ marginTop: 0, marginBottom: "8px", color: "#a1a1aa" }}>
-              Total Page Views
+              Page views ({data.traffic.windowDays}d)
             </p>
-            <h2 style={{ margin: 0, fontSize: "18px", color: "#fff", lineHeight: 1.35 }}>
-              {data.totalPageViews}
+            <h2 style={{ margin: 0, fontSize: "30px", color: "#fff" }}>
+              {data.traffic.views.toLocaleString()}
             </h2>
           </article>
           <article style={metricCardStyle}>
             <p style={{ marginTop: 0, marginBottom: "8px", color: "#a1a1aa" }}>
-              Today&apos;s Views
+              Unique sessions ({data.traffic.windowDays}d)
             </p>
-            <h2 style={{ margin: 0, fontSize: "18px", color: "#fff", lineHeight: 1.35 }}>
-              {data.todayViews}
+            <h2 style={{ margin: 0, fontSize: "30px", color: "#fff" }}>
+              {data.traffic.uniqueSessions.toLocaleString()}
+            </h2>
+          </article>
+          <article style={metricCardStyle}>
+            <p style={{ marginTop: 0, marginBottom: "8px", color: "#a1a1aa" }}>
+              Avg dwell ({data.traffic.windowDays}d)
+            </p>
+            <h2 style={{ margin: 0, fontSize: "30px", color: "#fff" }}>
+              {data.traffic.avgDwellSeconds == null
+                ? "—"
+                : `${data.traffic.avgDwellSeconds}s`}
             </h2>
           </article>
           <article style={metricCardStyle}>
@@ -227,6 +235,56 @@ export default async function AnalyticsPage({
             <h2 style={{ margin: 0, fontSize: "20px", color: "#fff", lineHeight: 1.35 }}>
               {data.lastPipelineRun}
             </h2>
+          </article>
+        </section>
+
+        {data.traffic.error ? (
+          <p style={{ marginTop: 0, marginBottom: "22px", color: "#fbbf24" }}>
+            Traffic: {data.traffic.error}
+          </p>
+        ) : null}
+
+        <section
+          style={{
+            display: "grid",
+            gap: "14px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            marginBottom: "22px",
+          }}
+        >
+          <article style={metricCardStyle}>
+            <h3 style={{ marginTop: 0, marginBottom: "12px", fontSize: "18px", color: "#fff" }}>
+              Top paths ({data.traffic.windowDays}d)
+            </h3>
+            {data.traffic.topPaths.length === 0 ? (
+              <p style={{ margin: 0, color: "#a1a1aa" }}>No views yet.</p>
+            ) : (
+              <ul style={{ margin: 0, paddingLeft: "18px", color: "#d4d4d8" }}>
+                {data.traffic.topPaths.map((row) => (
+                  <li key={row.label} style={{ marginBottom: "6px" }}>
+                    <span style={{ fontFamily: "monospace" }}>{row.label}</span>
+                    {" · "}
+                    {row.count}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </article>
+          <article style={metricCardStyle}>
+            <h3 style={{ marginTop: 0, marginBottom: "12px", fontSize: "18px", color: "#fff" }}>
+              Top outbound ({data.traffic.windowDays}d)
+            </h3>
+            {data.traffic.topOutbound.length === 0 ? (
+              <p style={{ margin: 0, color: "#a1a1aa" }}>No outbound clicks yet.</p>
+            ) : (
+              <ul style={{ margin: 0, paddingLeft: "18px", color: "#d4d4d8" }}>
+                {data.traffic.topOutbound.map((row) => (
+                  <li key={row.label} style={{ marginBottom: "6px", overflowWrap: "anywhere" }}>
+                    {row.label} · {row.count}
+                  </li>
+                ))}
+              </ul>
+            )}
           </article>
         </section>
 

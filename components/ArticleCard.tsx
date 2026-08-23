@@ -157,16 +157,6 @@ export default function ArticleCard({
           >
             {article.category.replace("_", " ")}
           </span>
-
-          <div
-            style={{
-              fontSize: isList ? "13px" : "12px",
-              color: "#71717a",
-              fontFamily: "monospace",
-            }}
-          >
-            Rel {article.score_relevance} • Tech {article.score_technical}
-          </div>
         </div>
 
         <h3
@@ -235,6 +225,8 @@ export default function ArticleCard({
           href={article.url}
           target="_blank"
           rel="noopener noreferrer"
+          data-ivs-entity="article"
+          data-ivs-id={article.id}
           style={{
             color: "#60a5fa",
             fontSize: isList ? "14.5px" : "13.5px",

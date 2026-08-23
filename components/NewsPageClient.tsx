@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Grid3X3, List, Search } from "lucide-react";
 import ArticleCard from "./ArticleCard";
 import { PageContainer } from "./PageContainer";
@@ -9,6 +9,7 @@ import { getSupabaseClient } from "../lib/supabase/client";
 import {
   ARTICLE_FEED_LIMIT,
   ARTICLE_SELECT_FIELDS,
+  filterNewsArticles,
   type Article,
 } from "../lib/articles";
 
@@ -41,7 +42,7 @@ async function fetchArticles(selectedCategory: string): Promise<Article[]> {
   const { data, error } = await query;
   if (error) throw error;
 
-  return (data ?? []) as Article[];
+  return filterNewsArticles((data ?? []) as Article[]);
 }
 
 export default function NewsPageClient({
@@ -58,23 +59,6 @@ export default function NewsPageClient({
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
-  const [todayViews, setTodayViews] = useState<number | null>(null);
-
-  useEffect(() => {
-    window.requestAnimationFrame(() => {
-      const todayKey = "ivsnews-today-views";
-      const dateKey = "ivsnews-today-date";
-      const today = new Date().toISOString().slice(0, 10);
-
-      const storedDate = localStorage.getItem(dateKey);
-      const storedViews = Number(localStorage.getItem(todayKey) ?? "0");
-      const nextViews = storedDate === today ? storedViews + 1 : 1;
-
-      localStorage.setItem(dateKey, today);
-      localStorage.setItem(todayKey, String(nextViews));
-      setTodayViews(nextViews);
-    });
-  }, []);
 
   const { data: articles, isPending, error } = useQuery({
     queryKey: ["feed", selectedCategory],
@@ -85,8 +69,9 @@ export default function NewsPageClient({
     refetchOnMount: false,
   });
 
-  const feedArticles =
-    articles ?? (selectedCategory === "All" ? initialArticles : []);
+  const feedArticles = useMemo(() => {
+    return articles ?? (selectedCategory === "All" ? initialArticles : []);
+  }, [articles, initialArticles, selectedCategory]);
   const filteredArticles = useMemo(() => {
     const needle = searchQuery.trim().toLowerCase();
     if (!needle) return feedArticles;
@@ -106,14 +91,8 @@ export default function NewsPageClient({
             IVS News
           </h1>
           <p className="mt-3 text-base text-zinc-400 sm:text-lg">
-            Technical news and analysis for intelligent video surveillance
+            Recent technical coverage for AI and edge video. Last 60 days.
           </p>
-          {todayViews !== null && (
-            <p className="mt-2 font-mono text-xs text-zinc-500 sm:text-sm">
-              {todayViews.toLocaleString()} today{todayViews === 1 ? "" : "s"}{" "}
-              view{todayViews === 1 ? "" : "s"}
-            </p>
-          )}
         </div>
 
         <div className="flex flex-col gap-8 lg:flex-row lg:gap-10">
@@ -267,10 +246,6 @@ export default function NewsPageClient({
             )}
           </main>
         </div>
-
-        <footer className="mt-16 border-t border-zinc-800 pt-8 text-left text-sm text-zinc-500 sm:mt-20">
-          Fresh technical coverage for the IVS ecosystem • Built with Grok
-        </footer>
       </PageContainer>
     </div>
   );

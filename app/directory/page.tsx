@@ -18,7 +18,7 @@ function enrichProviderLogo(provider: DirectoryProvider): DirectoryProvider {
 }
 
 export const metadata: Metadata = {
-  title: "Provider Directory | IVS News",
+  title: "Directory",
   description:
     "Browse video analytics, VMS, facial recognition, LPR, and edge AI providers in the intelligent video surveillance ecosystem.",
 };

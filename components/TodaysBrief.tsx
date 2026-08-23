@@ -85,6 +85,8 @@ export default function TodaysBrief({ brief }: { brief: IvsBriefRow }) {
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
+                            data-ivs-entity="brief"
+                            data-ivs-id={brief.id}
                             aria-label={`Open source for ${title}`}
                             className="shrink-0 rounded-lg border border-zinc-700 bg-zinc-950 p-2 text-zinc-300 transition hover:border-zinc-500 hover:text-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
                           >

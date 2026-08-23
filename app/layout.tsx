@@ -1,13 +1,29 @@
-
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/react";
+
 import "./globals.css";
 import ClientProviders from "./ClientProviders";
+import PageTracker from "../components/PageTracker";
+import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "../lib/site";
 
 export const metadata: Metadata = {
-  title: "IVS News | Intelligent Video Surveillance",
-  description: "Technical news, edge AI, computer vision techniques, deployments, and marketplace updates in intelligent video surveillance.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  alternates: {
+    types: {
+      "application/rss+xml": "/feed.xml",
+    },
+  },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "en_US",
+  },
 };
 
 export default function RootLayout({
@@ -17,12 +33,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen overflow-x-hidden bg-zinc-950 text-zinc-200 antialiased">
+      <body className="flex min-h-screen flex-col overflow-x-hidden bg-zinc-950 text-zinc-200 antialiased">
         <ClientProviders>
           <SiteHeader />
-          {children}
+          <div className="flex-1">{children}</div>
+          <SiteFooter />
+          <PageTracker />
         </ClientProviders>
-        <Analytics />
       </body>
     </html>
   );

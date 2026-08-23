@@ -4,9 +4,9 @@ import BriefsPageClient from "../../components/BriefsPageClient";
 import { getPublishedBriefs } from "../../lib/briefs";
 
 export const metadata: Metadata = {
-  title: "IVS Briefs | IVS News",
+  title: "Briefs",
   description:
-    "Archive of daily IVS / edge AI research briefs covering products, regulation, and market signals.",
+    "Archive of weekday IVS / edge AI research briefs covering products, regulation, and market signals.",
 };
 
 export const revalidate = 3600;
