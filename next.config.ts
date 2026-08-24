@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Hide the bottom-left Next.js badge in `next dev`. Errors still overlay.
+  devIndicators: false,
 };
 
 export default nextConfig;

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SiteContainer } from "./PageContainer";
+import SiteLogo from "./SiteLogo";
 import { CONTACT_EMAIL, SITE_TAGLINE, SUBSCRIBE_URL } from "../lib/site";
 
 export default function SiteFooter() {
@@ -8,8 +9,8 @@ export default function SiteFooter() {
     <footer className="border-t border-zinc-800 bg-zinc-950">
       <SiteContainer className="flex flex-col gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
         <div className="max-w-xl">
-          <p className="text-sm font-medium text-zinc-300">IVS News</p>
-          <p className="mt-1 text-sm text-zinc-500">{SITE_TAGLINE}</p>
+          <SiteLogo compact />
+          <p className="mt-2 text-sm text-zinc-500">{SITE_TAGLINE}</p>
         </div>
         <nav
           aria-label="Footer"

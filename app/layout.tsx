@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: SITE_NAME,
     locale: "en_US",
+    images: [{ url: "/logo/favicon-512.png", width: 512, height: 512 }],
   },
 };
 
