@@ -44,6 +44,11 @@ export function newsFeedCutoffIso(days = ARTICLE_MAX_AGE_DAYS): string {
   return date.toISOString();
 }
 
+/** UTC calendar date (YYYY-MM-DD) for the same 60-day window as the article feed. */
+export function newsFeedCutoffDate(days = ARTICLE_MAX_AGE_DAYS): string {
+  return newsFeedCutoffIso(days).slice(0, 10);
+}
+
 export function canonicalNewsUrl(url: string | null | undefined): string {
   if (!url?.trim()) return "";
   try {
@@ -184,6 +189,20 @@ export function filterNewsArticles(articles: Article[]): Article[] {
   }
 
   return capped;
+}
+
+/** Pass 1 visible cards minus URLs already shown in "In the briefs". */
+export function filterAlsoNotedArticles(
+  articles: Article[],
+  briefedCanonicalUrls: Iterable<string>,
+): Article[] {
+  const keys = new Set(
+    [...briefedCanonicalUrls].map((url) => canonicalNewsUrl(url)).filter(Boolean),
+  );
+  return filterNewsArticles(articles).filter((article) => {
+    const key = canonicalNewsUrl(article.url);
+    return Boolean(key) && !keys.has(key);
+  });
 }
 
 export function formatArticlePublishedDate(

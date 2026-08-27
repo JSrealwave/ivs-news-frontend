@@ -107,7 +107,9 @@ export type GetPublishedBriefsResult = {
   error: string | null;
 };
 
-export async function getPublishedBriefs(): Promise<GetPublishedBriefsResult> {
+export async function getPublishedBriefs(options?: {
+  sinceDate?: string;
+}): Promise<GetPublishedBriefsResult> {
   const supabase = getSupabaseServerClient();
   if (!supabase) {
     return {
@@ -117,11 +119,17 @@ export async function getPublishedBriefs(): Promise<GetPublishedBriefsResult> {
     };
   }
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("ivs_briefs")
     .select(IVS_BRIEF_SELECT_FIELDS)
     .eq("published", true)
     .order("brief_date", { ascending: false });
+
+  if (options?.sinceDate) {
+    query = query.gte("brief_date", options.sinceDate);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return { briefs: [], error: error.message };

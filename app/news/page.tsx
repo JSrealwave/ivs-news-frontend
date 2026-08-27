@@ -5,17 +5,19 @@ import {
   ARTICLE_FEED_LIMIT,
   ARTICLE_SELECT_FIELDS,
   HIDDEN_ARTICLE_SOURCE,
-  filterNewsArticles,
+  filterAlsoNotedArticles,
+  newsFeedCutoffDate,
   newsFeedCutoffIso,
   type Article,
 } from "../../lib/articles";
-import { getLatestBrief } from "../../lib/briefs";
+import { collectBriefedSources } from "../../lib/brief-sources";
+import { getLatestBrief, getPublishedBriefs } from "../../lib/briefs";
 import { getSupabaseServerClient } from "../../lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "News",
   description:
-    "Recent technical news and analysis for AI and edge video surveillance.",
+    "Sources behind the weekday IVS brief, plus a few items noted but not briefed.",
 };
 
 export const revalidate = 60;
@@ -50,20 +52,27 @@ async function getInitialArticles(): Promise<{
   }
 
   return {
-    articles: filterNewsArticles((data ?? []) as Article[]),
+    articles: (data ?? []) as Article[],
     initialLoadError: null,
   };
 }
 
 export default async function NewsPage() {
-  const [{ articles, initialLoadError }, latestBrief] = await Promise.all([
-    getInitialArticles(),
-    getLatestBrief(),
-  ]);
+  const cutoffDate = newsFeedCutoffDate();
+  const [{ articles, initialLoadError }, latestBrief, published] =
+    await Promise.all([
+      getInitialArticles(),
+      getLatestBrief(),
+      getPublishedBriefs({ sinceDate: cutoffDate }),
+    ]);
+
+  const briefed = collectBriefedSources(published.briefs);
+  const alsoNoted = filterAlsoNotedArticles(articles, briefed.canonicalUrls);
 
   return (
     <NewsPageClient
-      initialArticles={articles}
+      alsoNoted={alsoNoted}
+      briefedGroups={briefed.groups}
       initialLoadError={initialLoadError}
       latestBrief={latestBrief.brief}
     />
