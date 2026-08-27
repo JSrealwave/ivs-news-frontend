@@ -92,6 +92,33 @@ function haystackHasTerm(haystack: string, term: string): boolean {
  * LPR → VMS → Edge → Policy wins. Do not pass Key point / Why-it-matters;
  * those belong on the brief permalink.
  */
+export function parseNewsTopicParam(
+  value: string | null | undefined,
+): NewsTopicFilter {
+  if (!value) return "All";
+  switch (value.trim().toLowerCase()) {
+    case "all":
+      return "All";
+    case "lpr":
+      return "LPR";
+    case "vms":
+      return "VMS";
+    case "edge":
+      return "Edge";
+    case "policy":
+      return "Policy";
+    case "other":
+      return "Other";
+    default:
+      return "All";
+  }
+}
+
+export function newsTopicQueryValue(topic: NewsTopicFilter): string | null {
+  if (topic === "All") return null;
+  return topic.toLowerCase();
+}
+
 export function classifyNewsTopic(...parts: (string | null | undefined)[]): NewsTopic {
   const haystack = parts
     .filter((part): part is string => typeof part === "string" && part.trim().length > 0)

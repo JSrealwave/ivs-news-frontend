@@ -70,6 +70,7 @@ export default async function BriefDetailPage({ params }: BriefPageProps) {
       }))}
       selectedBrief={brief}
       loadError={error}
+      showContinue
     />
   );
 }

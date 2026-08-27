@@ -3,6 +3,7 @@
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
+import BriefContinueRow from "./BriefContinueRow";
 import {
   briefItemKeyPoint,
   briefItemSourceLabel,
@@ -13,6 +14,7 @@ import {
   splitNumberedAssessmentPoints,
   type IvsBriefRow,
 } from "../lib/briefs";
+import { buildBriefContinue } from "../lib/brief-continue";
 import { PageContainer } from "./PageContainer";
 
 export type BriefSidebarItem = {
@@ -61,7 +63,13 @@ function AssessmentBlock({
   );
 }
 
-function BriefDetail({ brief }: { brief: IvsBriefRow }) {
+function BriefDetail({
+  brief,
+  showContinue = false,
+}: {
+  brief: IvsBriefRow;
+  showContinue?: boolean;
+}) {
   const items = normalizeBriefItems(brief.items).filter((item) => {
     const title = typeof item.title === "string" ? item.title.trim() : "";
     return Boolean(title || briefItemKeyPoint(item));
@@ -97,6 +105,8 @@ function BriefDetail({ brief }: { brief: IvsBriefRow }) {
       });
     }
   }
+
+  const continueModel = showContinue ? buildBriefContinue(brief) : null;
 
   return (
     <article className="overflow-hidden rounded-2xl border border-zinc-700/80 bg-zinc-900/70">
@@ -258,6 +268,8 @@ function BriefDetail({ brief }: { brief: IvsBriefRow }) {
             </ol>
           )}
         </section>
+
+        {continueModel ? <BriefContinueRow model={continueModel} /> : null}
       </div>
     </article>
   );
@@ -267,10 +279,12 @@ export default function BriefsPageClient({
   briefs,
   selectedBrief,
   loadError = null,
+  showContinue = false,
 }: {
   briefs: BriefSidebarItem[];
   selectedBrief: IvsBriefRow | null;
   loadError?: string | null;
+  showContinue?: boolean;
 }) {
   const selectedDate = selectedBrief?.brief_date ?? null;
 
@@ -337,7 +351,10 @@ export default function BriefsPageClient({
 
             <main className="min-w-0 flex-1">
               {selectedBrief ? (
-                <BriefDetail brief={selectedBrief} />
+                <BriefDetail
+                  brief={selectedBrief}
+                  showContinue={showContinue}
+                />
               ) : (
                 <p className="text-base text-zinc-400">
                   Select a brief from the archive.

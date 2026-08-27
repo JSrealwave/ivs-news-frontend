@@ -10,6 +10,7 @@ import {
   type Article,
 } from "../../lib/articles";
 import { buildNewsExploreItems } from "../../lib/news-explore";
+import { parseNewsTopicParam } from "../../lib/news-topics";
 import { getPublishedBriefs } from "../../lib/briefs";
 import { getSupabaseServerClient } from "../../lib/supabase/server";
 
@@ -37,13 +38,21 @@ async function getVisibleArticles(): Promise<Article[]> {
   return (data ?? []) as Article[];
 }
 
-export default async function NewsPage() {
-  const [articles, published] = await Promise.all([
+export default async function NewsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ topic?: string | string[] }>;
+}) {
+  const [articles, published, params] = await Promise.all([
     getVisibleArticles(),
     getPublishedBriefs({ sinceDate: newsFeedCutoffDate() }),
+    searchParams,
   ]);
 
+  const topicParam = Array.isArray(params.topic) ? params.topic[0] : params.topic;
   const items = buildNewsExploreItems(published.briefs, articles);
 
-  return <NewsPageClient items={items} />;
+  return (
+    <NewsPageClient items={items} topic={parseNewsTopicParam(topicParam)} />
+  );
 }

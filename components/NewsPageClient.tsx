@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import NewsExploreCard from "./NewsExploreCard";
@@ -8,16 +9,18 @@ import { PageContainer } from "./PageContainer";
 import type { NewsExploreItem } from "../lib/news-explore";
 import {
   NEWS_TOPIC_FILTERS,
+  newsTopicQueryValue,
   type NewsTopicFilter,
 } from "../lib/news-topics";
 
 export default function NewsPageClient({
   items,
+  topic,
 }: {
   items: NewsExploreItem[];
+  topic: NewsTopicFilter;
 }) {
   const [query, setQuery] = useState("");
-  const [topic, setTopic] = useState<NewsTopicFilter>("All");
   const [briefedOnly, setBriefedOnly] = useState(false);
 
   const visible = useMemo(() => {
@@ -68,12 +71,16 @@ export default function NewsPageClient({
           >
             {NEWS_TOPIC_FILTERS.map((filter) => {
               const selected = topic === filter;
+              const href =
+                filter === "All"
+                  ? "/news"
+                  : `/news?topic=${newsTopicQueryValue(filter)}`;
               return (
-                <button
+                <Link
                   key={filter}
-                  type="button"
-                  onClick={() => setTopic(filter)}
-                  aria-pressed={selected}
+                  href={href}
+                  scroll={false}
+                  aria-current={selected ? "page" : undefined}
                   className={[
                     "rounded-full px-3 py-1.5 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
                     selected
@@ -82,7 +89,7 @@ export default function NewsPageClient({
                   ].join(" ")}
                 >
                   {filter}
-                </button>
+                </Link>
               );
             })}
           </div>
