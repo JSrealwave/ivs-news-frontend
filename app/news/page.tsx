@@ -4,14 +4,12 @@ import NewsPageClient from "../../components/NewsPageClient";
 import {
   ARTICLE_FEED_LIMIT,
   ARTICLE_SELECT_FIELDS,
+  HIDDEN_ARTICLE_SOURCE,
   filterNewsArticles,
+  newsFeedCutoffIso,
   type Article,
 } from "../../lib/articles";
-import {
-  buildProviderLogoByHost,
-  buildProviderLogoByName,
-} from "../../lib/image-sources";
-import { getDirectoryProviders } from "../../lib/providers";
+import { getLatestBrief } from "../../lib/briefs";
 import { getSupabaseServerClient } from "../../lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -20,7 +18,7 @@ export const metadata: Metadata = {
     "Recent technical news and analysis for AI and edge video surveillance.",
 };
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 async function getInitialArticles(): Promise<{
   articles: Article[];
@@ -38,8 +36,10 @@ async function getInitialArticles(): Promise<{
   const { data, error } = await supabaseServer
     .from("ivs_articles")
     .select(ARTICLE_SELECT_FIELDS)
+    .not("published_at", "is", null)
+    .neq("source", HIDDEN_ARTICLE_SOURCE)
+    .gte("published_at", newsFeedCutoffIso())
     .order("published_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false })
     .limit(ARTICLE_FEED_LIMIT);
 
   if (error) {
@@ -56,20 +56,16 @@ async function getInitialArticles(): Promise<{
 }
 
 export default async function NewsPage() {
-  const [{ articles, initialLoadError }, directory] = await Promise.all([
+  const [{ articles, initialLoadError }, latestBrief] = await Promise.all([
     getInitialArticles(),
-    getDirectoryProviders(),
+    getLatestBrief(),
   ]);
-
-  const providerLogoByHost = buildProviderLogoByHost(directory.providers);
-  const providerLogoByName = buildProviderLogoByName(directory.providers);
 
   return (
     <NewsPageClient
       initialArticles={articles}
       initialLoadError={initialLoadError}
-      providerLogoByHost={providerLogoByHost}
-      providerLogoByName={providerLogoByName}
+      latestBrief={latestBrief.brief}
     />
   );
 }

@@ -4,14 +4,18 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Grid3X3, List, Search } from "lucide-react";
 import ArticleCard from "./ArticleCard";
+import NewsBriefStrip from "./NewsBriefStrip";
 import { PageContainer } from "./PageContainer";
 import { getSupabaseClient } from "../lib/supabase/client";
 import {
   ARTICLE_FEED_LIMIT,
   ARTICLE_SELECT_FIELDS,
+  HIDDEN_ARTICLE_SOURCE,
   filterNewsArticles,
+  newsFeedCutoffIso,
   type Article,
 } from "../lib/articles";
+import type { IvsBriefRow } from "../lib/briefs";
 
 const categories = [
   "All",
@@ -31,8 +35,10 @@ async function fetchArticles(selectedCategory: string): Promise<Article[]> {
   let query = supabase
     .from("ivs_articles")
     .select(ARTICLE_SELECT_FIELDS)
+    .not("published_at", "is", null)
+    .neq("source", HIDDEN_ARTICLE_SOURCE)
+    .gte("published_at", newsFeedCutoffIso())
     .order("published_at", { ascending: false, nullsFirst: false })
-    .order("created_at", { ascending: false })
     .limit(ARTICLE_FEED_LIMIT);
 
   if (selectedCategory !== "All") {
@@ -48,20 +54,18 @@ async function fetchArticles(selectedCategory: string): Promise<Article[]> {
 export default function NewsPageClient({
   initialArticles,
   initialLoadError,
-  providerLogoByHost = {},
-  providerLogoByName = {},
+  latestBrief = null,
 }: {
   initialArticles: Article[];
   initialLoadError: string | null;
-  providerLogoByHost?: Record<string, string>;
-  providerLogoByName?: Record<string, string>;
+  latestBrief?: IvsBriefRow | null;
 }) {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: articles, isPending, error } = useQuery({
-    queryKey: ["feed", selectedCategory],
+    queryKey: ["feed", "pass1", selectedCategory],
     queryFn: () => fetchArticles(selectedCategory),
     staleTime: 1000 * 60 * 30,
     gcTime: 1000 * 60 * 60,
@@ -92,8 +96,11 @@ export default function NewsPageClient({
           </h1>
           <p className="mt-3 text-base text-zinc-400 sm:text-lg">
             Recent technical coverage for AI and edge video. Last 60 days.
+            Dated articles only; the feed may be sparse.
           </p>
         </div>
+
+        {latestBrief ? <NewsBriefStrip brief={latestBrief} /> : null}
 
         <div className="flex flex-col gap-8 lg:flex-row lg:gap-10">
           <aside
@@ -217,6 +224,15 @@ export default function NewsPageClient({
             )}
 
             {!showFeedLoading &&
+              !initialLoadError &&
+              !error &&
+              feedArticles.length === 0 && (
+                <p className="py-12 text-left text-sm text-zinc-400">
+                  No dated articles in the last 60 days.
+                </p>
+              )}
+
+            {!showFeedLoading &&
               feedArticles.length > 0 &&
               filteredArticles.length === 0 && (
                 <p className="py-12 text-left text-sm text-zinc-400">
@@ -237,8 +253,6 @@ export default function NewsPageClient({
                     key={article.id}
                     article={article}
                     viewMode={viewMode}
-                    providerLogoByHost={providerLogoByHost}
-                    providerLogoByName={providerLogoByName}
                     priorityImage={index < 12}
                   />
                 ))}

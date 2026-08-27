@@ -4,15 +4,16 @@
 import { ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, type CSSProperties } from "react";
 
-import { formatArticlePublishedDate, type Article } from "../lib/articles";
-import { resolveArticleProviderLogo } from "../lib/image-sources";
+import {
+  formatArticlePublishedDate,
+  isUsableNewsThumbnail,
+  type Article,
+} from "../lib/articles";
 import SmartImage from "./SmartImage";
 
 interface ArticleCardProps {
   article: Article;
   viewMode: "grid" | "list";
-  providerLogoByHost?: Record<string, string>;
-  providerLogoByName?: Record<string, string>;
   /** Eager-load above-the-fold thumbnails on first paint. */
   priorityImage?: boolean;
 }
@@ -22,18 +23,12 @@ const ASPECT_RATIO_16_9 = "16 / 9";
 export default function ArticleCard({
   article,
   viewMode,
-  providerLogoByHost = {},
-  providerLogoByName = {},
   priorityImage = false,
 }: ArticleCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const isList = viewMode === "list";
-  const providerLogo = resolveArticleProviderLogo(
-    article,
-    providerLogoByHost,
-    providerLogoByName,
-  );
+  const thumbnail = isUsableNewsThumbnail(article.image) ? article.image : null;
 
   const getCategoryStyle = (category: string) => {
     switch (category) {
@@ -60,8 +55,9 @@ export default function ArticleCard({
         borderBottom: "1px solid #3f3f46",
         padding: "24px 0",
         display: "grid",
-        gridTemplateColumns:
-          "minmax(clamp(180px, 38vw, 280px), min(320px, 42vw)) minmax(0, 1fr)",
+        gridTemplateColumns: thumbnail
+          ? "minmax(clamp(180px, 38vw, 280px), min(320px, 42vw)) minmax(0, 1fr)"
+          : "minmax(0, 1fr)",
         gap: "clamp(16px, 3vw, 22px)",
         alignItems: "start",
         transition: "all 0.2s ease",
@@ -125,15 +121,18 @@ export default function ArticleCard({
         }
       }}
     >
-      <SmartImage
-        src={article.image}
-        fallbackSrc={providerLogo}
-        alt={article.title}
-        style={mediaWrapStyle}
-        objectFit="cover"
-        showLoadingSkeleton
-        priority={priorityImage}
-      />
+      {thumbnail ? (
+        <SmartImage
+          src={thumbnail}
+          fallbackSrc={null}
+          placeholderSrc=""
+          alt={article.title}
+          style={mediaWrapStyle}
+          objectFit="cover"
+          showLoadingSkeleton
+          priority={priorityImage}
+        />
+      ) : null}
 
       <div style={contentStyle}>
         <div
