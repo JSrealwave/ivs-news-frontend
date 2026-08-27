@@ -5,35 +5,24 @@ import {
   ARTICLE_FEED_LIMIT,
   ARTICLE_SELECT_FIELDS,
   HIDDEN_ARTICLE_SOURCE,
-  filterAlsoNotedArticles,
   newsFeedCutoffDate,
   newsFeedCutoffIso,
   type Article,
 } from "../../lib/articles";
-import { collectBriefedSources } from "../../lib/brief-sources";
-import { getLatestBrief, getPublishedBriefs } from "../../lib/briefs";
+import { buildNewsExploreItems } from "../../lib/news-explore";
+import { getPublishedBriefs } from "../../lib/briefs";
 import { getSupabaseServerClient } from "../../lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "News",
-  description:
-    "Sources behind the weekday IVS brief, plus a few items noted but not briefed.",
+  description: "Explore IVS coverage by topic. Last 60 days.",
 };
 
 export const revalidate = 60;
 
-async function getInitialArticles(): Promise<{
-  articles: Article[];
-  initialLoadError: string | null;
-}> {
+async function getVisibleArticles(): Promise<Article[]> {
   const supabaseServer = getSupabaseServerClient();
-  if (!supabaseServer) {
-    return {
-      articles: [],
-      initialLoadError:
-        "Supabase is not configured. Add SUPABASE_URL/SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY.",
-    };
-  }
+  if (!supabaseServer) return [];
 
   const { data, error } = await supabaseServer
     .from("ivs_articles")
@@ -44,37 +33,17 @@ async function getInitialArticles(): Promise<{
     .order("published_at", { ascending: false, nullsFirst: false })
     .limit(ARTICLE_FEED_LIMIT);
 
-  if (error) {
-    return {
-      articles: [],
-      initialLoadError: error.message,
-    };
-  }
-
-  return {
-    articles: (data ?? []) as Article[],
-    initialLoadError: null,
-  };
+  if (error) return [];
+  return (data ?? []) as Article[];
 }
 
 export default async function NewsPage() {
-  const cutoffDate = newsFeedCutoffDate();
-  const [{ articles, initialLoadError }, latestBrief, published] =
-    await Promise.all([
-      getInitialArticles(),
-      getLatestBrief(),
-      getPublishedBriefs({ sinceDate: cutoffDate }),
-    ]);
+  const [articles, published] = await Promise.all([
+    getVisibleArticles(),
+    getPublishedBriefs({ sinceDate: newsFeedCutoffDate() }),
+  ]);
 
-  const briefed = collectBriefedSources(published.briefs);
-  const alsoNoted = filterAlsoNotedArticles(articles, briefed.canonicalUrls);
+  const items = buildNewsExploreItems(published.briefs, articles);
 
-  return (
-    <NewsPageClient
-      alsoNoted={alsoNoted}
-      briefedGroups={briefed.groups}
-      initialLoadError={initialLoadError}
-      latestBrief={latestBrief.brief}
-    />
-  );
+  return <NewsPageClient items={items} />;
 }
